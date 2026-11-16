@@ -1,0 +1,59 @@
+{
+ "run_id": "test-20261114-184246",
+ "created_at": "2026-11-14T18:44:49+08:00",
+ "scope": "quick",
+ "repo": "C:\\Users\\ASYS\\Desktop\\VibeMemory",
+ "revision": {
+  "git_available": true,
+  "commit": "eaaf1e7be4f2",
+  "branch": "main",
+  "dirty_count": 306,
+  "dirty_files": [
+   "ocs/ATOM_EDGE_LIFECYCLE.md",
+   "docs/REVIEW_REPAIR_PROGRESS.md",
+   "docs/TESTING.md",
+   "vibe_memory/gc.py",
+   "vibe_memory/mcp_server.py",
+   "vibe_memory/sdk.py",
+   "vibe_memory/storage/sqlite_store.py",
+   ".pytest-tmp-answer-full-20260924/",
+   ".pytest-tmp-answer-regression-20260924/",
+   ".pytest-tmp-confirmed-use-full/",
+   ".pytest-tmp-content-gate-full/",
+   ".pytest-tmp-correction-20260923/",
+   ".pytest-tmp-evidence-budget-full-20261002/",
+   ".pytest-tmp-evidence-final-20260923/",
+   ".pytest-tmp-evidence-regression-20260923/",
+   ".pytest-tmp-evidence-transport-final-20261002/",
+   ".pytest-tmp-forget-action-full/",
+   ".pytest-tmp-forget-plan-full/",
+   ".pytest-tmp-forget-sdk-path-full/",
+   ".pytest-tmp-forget-transaction-full/"
+  ],
+  "note": "未提交改动会改变被测代码；引用本存档指标时须结合 dirty 记录"
+ },
+ "summary": {
+  "total": 73,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "duration_s": 122.4,
+  "passed": 73,
+  "pass_rate": 1.0,
+  "failures_detail": [],
+  "failures_count_real": 0,
+  "pytest_rc": 0
+ },
+ "coverage": null,
+ "duration_wall_s": 123.1,
+ "gate": {
+  "status": "NO_BASELINE",
+  "detail": "首轮运行，无对比基线"
+ },
+ "artifacts": {
+  "junit_xml": "test-20261114-184246.junit.xml",
+  "coverage_xml": null,
+  "junit_sha256": "95ae172492d14e8b096730f5ede73d5a41d3b66d1d3d401e2e1e70b69cc6ab0e"
+ },
+ "note": "审计修复后首次端到端验证"
+}

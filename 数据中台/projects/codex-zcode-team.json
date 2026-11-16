@@ -1,0 +1,15 @@
+{
+  "project_id": "codex-zcode-team",
+  "name": "Codex-ZCode 多智能体协作",
+  "description": "第三接入项目：独立的多智能体协作工作区（AGENTS.md 协作规范 + events.jsonl 事件流 + doctor.json 健康快照）。全部用既有抽取器 kind 接入，零新代码。",
+  "license": {"spdx": null, "note": "个人工作区数据，未设开源许可证，仅内部使用"},
+  "root": {"Windows": "C:/Users/ASYS/Desktop/codex-zcode-team", "Linux": "/data/home/projects/codex-zcode-team"},
+  "sources": [
+    {"id": "cz_events", "kind": "jsonl_file", "path": "{project_root}/events.jsonl", "required": false,
+     "desc": "智能体协作事件流（行数/事件类型统计摘要）"},
+    {"id": "cz_doctor", "kind": "json_file", "path": "{project_root}/doctor.json", "required": false,
+     "desc": "工作区健康诊断快照"},
+    {"id": "cz_docs", "kind": "markdown_dir", "path": "{project_root}", "pattern": "*.md", "required": false,
+     "desc": "协作规范与指南文档（AGENTS.md/README 等）"}
+  ]
+}

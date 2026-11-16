@@ -1,0 +1,680 @@
+{
+ "checked_at": "2026-11-08T01:12:49+08:00",
+ "baseline_generated_at": "2026-11-08T01:12:49+08:00",
+ "evalsets": {
+  "abstention": {
+   "run_id": "run-20261108-010841-6fec10-abstention",
+   "status": "PASS",
+   "checks": [
+    {
+     "metric": "abstention_precision",
+     "value": 1.0,
+     "threshold": 0.9,
+     "pass": true
+    }
+   ],
+   "env_warning": null
+  },
+  "abstention_large": {
+   "run_id": "run-20261108-010841-6fec10-abstention_large",
+   "status": "PASS",
+   "checks": [
+    {
+     "metric": "abstention_precision",
+     "value": 1.0,
+     "threshold": 0.9,
+     "pass": true
+    }
+   ],
+   "env_warning": null
+  },
+  "basic_recall": {
+   "run_id": "run-20261108-010841-6fec10-basic_recall",
+   "status": "PASS",
+   "checks": [
+    {
+     "metric": "recall_at_k",
+     "value": 1.0,
+     "threshold": 0.95,
+     "pass": true
+    },
+    {
+     "metric": "mrr",
+     "value": 0.9062,
+     "threshold": 0.8562,
+     "pass": true
+    },
+    {
+     "metric": "ndcg_at_k",
+     "value": 0.9288,
+     "threshold": 0.8788,
+     "pass": true
+    },
+    {
+     "metric": "keyword_hit",
+     "value": 1.0,
+     "threshold": 0.95,
+     "pass": true
+    }
+   ],
+   "env_warning": null
+  },
+  "conflict_update": {
+   "run_id": "run-20261108-010841-6fec10-conflict_update",
+   "status": "PASS",
+   "checks": [
+    {
+     "metric": "recall_at_k",
+     "value": 0.8,
+     "threshold": 0.75,
+     "pass": true
+    },
+    {
+     "metric": "mrr",
+     "value": 0.5,
+     "threshold": 0.45,
+     "pass": true
+    },
+    {
+     "metric": "ndcg_at_k",
+     "value": 0.5786,
+     "threshold": 0.5286,
+     "pass": true
+    },
+    {
+     "metric": "keyword_hit",
+     "value": 1.0,
+     "threshold": 0.95,
+     "pass": true
+    }
+   ],
+   "env_warning": null
+  },
+  "conflict_update_large": {
+   "run_id": "run-20261108-010841-6fec10-conflict_update_large",
+   "status": "PASS",
+   "checks": [
+    {
+     "metric": "recall_at_k",
+     "value": 1.0,
+     "threshold": 0.95,
+     "pass": true
+    },
+    {
+     "metric": "mrr",
+     "value": 0.8714,
+     "threshold": 0.8214,
+     "pass": true
+    },
+    {
+     "metric": "ndcg_at_k",
+     "value": 0.9045,
+     "threshold": 0.8545,
+     "pass": true
+    },
+    {
+     "metric": "keyword_hit",
+     "value": 1.0,
+     "threshold": 0.95,
+     "pass": true
+    }
+   ],
+   "env_warning": null
+  },
+  "locomo_c01": {
+   "run_id": "run-20261108-010337-73fd54-locomo_c01",
+   "status": "PASS",
+   "checks": [
+    {
+     "metric": "recall_at_k",
+     "value": 0.8456,
+     "threshold": 0.7956,
+     "pass": true
+    },
+    {
+     "metric": "mrr",
+     "value": 0.6669,
+     "threshold": 0.6169,
+     "pass": true
+    },
+    {
+     "metric": "ndcg_at_k",
+     "value": 0.6754,
+     "threshold": 0.6254,
+     "pass": true
+    }
+   ],
+   "env_warning": null
+  },
+  "locomo_c02": {
+   "run_id": "run-20261108-010337-f90087-locomo_c02",
+   "status": "PASS",
+   "checks": [
+    {
+     "metric": "recall_at_k",
+     "value": 0.8025,
+     "threshold": 0.7525,
+     "pass": true
+    },
+    {
+     "metric": "mrr",
+     "value": 0.6416,
+     "threshold": 0.5916,
+     "pass": true
+    },
+    {
+     "metric": "ndcg_at_k",
+     "value": 0.6577,
+     "threshold": 0.6077,
+     "pass": true
+    }
+   ],
+   "env_warning": null
+  },
+  "locomo_c03": {
+   "run_id": "run-20261108-010338-5df95e-locomo_c03",
+   "status": "PASS",
+   "checks": [
+    {
+     "metric": "recall_at_k",
+     "value": 0.7434,
+     "threshold": 0.6934,
+     "pass": true
+    },
+    {
+     "metric": "mrr",
+     "value": 0.5828,
+     "threshold": 0.5328,
+     "pass": true
+    },
+    {
+     "metric": "ndcg_at_k",
+     "value": 0.5902,
+     "threshold": 0.5402,
+     "pass": true
+    }
+   ],
+   "env_warning": null
+  },
+  "locomo_c04": {
+   "run_id": "run-20261108-010339-8711f4-locomo_c04",
+   "status": "PASS",
+   "checks": [
+    {
+     "metric": "recall_at_k",
+     "value": 0.8122,
+     "threshold": 0.7622,
+     "pass": true
+    },
+    {
+     "metric": "mrr",
+     "value": 0.6212,
+     "threshold": 0.5712,
+     "pass": true
+    },
+    {
+     "metric": "ndcg_at_k",
+     "value": 0.6315,
+     "threshold": 0.5815,
+     "pass": true
+    }
+   ],
+   "env_warning": null
+  },
+  "locomo_c05": {
+   "run_id": "run-20261108-010339-647f72-locomo_c05",
+   "status": "PASS",
+   "checks": [
+    {
+     "metric": "recall_at_k",
+     "value": 0.8927,
+     "threshold": 0.8427,
+     "pass": true
+    },
+    {
+     "metric": "mrr",
+     "value": 0.7327,
+     "threshold": 0.6827,
+     "pass": true
+    },
+    {
+     "metric": "ndcg_at_k",
+     "value": 0.7187,
+     "threshold": 0.6687,
+     "pass": true
+    }
+   ],
+   "env_warning": null
+  },
+  "locomo_c06": {
+   "run_id": "run-20261108-010340-b0a0e6-locomo_c06",
+   "status": "PASS",
+   "checks": [
+    {
+     "metric": "recall_at_k",
+     "value": 0.8374,
+     "threshold": 0.7874,
+     "pass": true
+    },
+    {
+     "metric": "mrr",
+     "value": 0.664,
+     "threshold": 0.614,
+     "pass": true
+    },
+    {
+     "metric": "ndcg_at_k",
+     "value": 0.6425,
+     "threshold": 0.5925,
+     "pass": true
+    }
+   ],
+   "env_warning": null
+  },
+  "locomo_c07": {
+   "run_id": "run-20261108-010341-4a2f32-locomo_c07",
+   "status": "PASS",
+   "checks": [
+    {
+     "metric": "recall_at_k",
+     "value": 0.8523,
+     "threshold": 0.8023,
+     "pass": true
+    },
+    {
+     "metric": "mrr",
+     "value": 0.7018,
+     "threshold": 0.6518,
+     "pass": true
+    },
+    {
+     "metric": "ndcg_at_k",
+     "value": 0.7085,
+     "threshold": 0.6585,
+     "pass": true
+    }
+   ],
+   "env_warning": null
+  },
+  "locomo_c08": {
+   "run_id": "run-20261108-010341-48f77b-locomo_c08",
+   "status": "PASS",
+   "checks": [
+    {
+     "metric": "recall_at_k",
+     "value": 0.8482,
+     "threshold": 0.7982,
+     "pass": true
+    },
+    {
+     "metric": "mrr",
+     "value": 0.6722,
+     "threshold": 0.6222,
+     "pass": true
+    },
+    {
+     "metric": "ndcg_at_k",
+     "value": 0.6919,
+     "threshold": 0.6419,
+     "pass": true
+    }
+   ],
+   "env_warning": null
+  },
+  "locomo_c09": {
+   "run_id": "run-20261108-010342-eabb96-locomo_c09",
+   "status": "PASS",
+   "checks": [
+    {
+     "metric": "recall_at_k",
+     "value": 0.7974,
+     "threshold": 0.7474,
+     "pass": true
+    },
+    {
+     "metric": "mrr",
+     "value": 0.5777,
+     "threshold": 0.5277,
+     "pass": true
+    },
+    {
+     "metric": "ndcg_at_k",
+     "value": 0.5778,
+     "threshold": 0.5278,
+     "pass": true
+    }
+   ],
+   "env_warning": null
+  },
+  "locomo_c10": {
+   "run_id": "run-20261108-010343-2a6f41-locomo_c10",
+   "status": "PASS",
+   "checks": [
+    {
+     "metric": "recall_at_k",
+     "value": 0.8258,
+     "threshold": 0.7758,
+     "pass": true
+    },
+    {
+     "metric": "mrr",
+     "value": 0.6358,
+     "threshold": 0.5858,
+     "pass": true
+    },
+    {
+     "metric": "ndcg_at_k",
+     "value": 0.6459,
+     "threshold": 0.5959,
+     "pass": true
+    }
+   ],
+   "env_warning": null
+  },
+  "longmemeval_s_subset30": {
+   "run_id": "run-20261108-010549-7e7fa4-longmemeval_s_subset30",
+   "status": "PASS",
+   "checks": [
+    {
+     "metric": "recall_at_k",
+     "value": 0.8,
+     "threshold": 0.75,
+     "pass": true
+    },
+    {
+     "metric": "mrr",
+     "value": 0.7583,
+     "threshold": 0.7083,
+     "pass": true
+    },
+    {
+     "metric": "ndcg_at_k",
+     "value": 0.7687,
+     "threshold": 0.7187,
+     "pass": true
+    }
+   ],
+   "env_warning": null
+  },
+  "multi_hop": {
+   "run_id": "run-20261108-010841-6fec10-multi_hop",
+   "status": "PASS",
+   "checks": [
+    {
+     "metric": "recall_at_k",
+     "value": 0.5,
+     "threshold": 0.45,
+     "pass": true
+    },
+    {
+     "metric": "mrr",
+     "value": 0.4167,
+     "threshold": 0.3667,
+     "pass": true
+    },
+    {
+     "metric": "ndcg_at_k",
+     "value": 0.4385,
+     "threshold": 0.3885,
+     "pass": true
+    },
+    {
+     "metric": "keyword_hit",
+     "value": 1.0,
+     "threshold": 0.95,
+     "pass": true
+    }
+   ],
+   "env_warning": null
+  },
+  "multi_hop_bridge": {
+   "run_id": "run-20261108-010841-6fec10-multi_hop_bridge",
+   "status": "PASS",
+   "checks": [
+    {
+     "metric": "recall_at_k",
+     "value": 0.5,
+     "threshold": 0.45,
+     "pass": true
+    },
+    {
+     "metric": "mrr",
+     "value": 0.4167,
+     "threshold": 0.3667,
+     "pass": true
+    },
+    {
+     "metric": "ndcg_at_k",
+     "value": 0.4385,
+     "threshold": 0.3885,
+     "pass": true
+    },
+    {
+     "metric": "keyword_hit",
+     "value": 1.0,
+     "threshold": 0.95,
+     "pass": true
+    }
+   ],
+   "env_warning": null
+  },
+  "multi_hop_large": {
+   "run_id": "run-20261108-010841-6fec10-multi_hop_large",
+   "status": "PASS",
+   "checks": [
+    {
+     "metric": "recall_at_k",
+     "value": 0.2389,
+     "threshold": 0.1889,
+     "pass": true
+    },
+    {
+     "metric": "mrr",
+     "value": 0.1113,
+     "threshold": 0.0613,
+     "pass": true
+    },
+    {
+     "metric": "ndcg_at_k",
+     "value": 0.1426,
+     "threshold": 0.0926,
+     "pass": true
+    },
+    {
+     "metric": "keyword_hit",
+     "value": 1.0,
+     "threshold": 0.95,
+     "pass": true
+    }
+   ],
+   "env_warning": null
+  },
+  "preference": {
+   "run_id": "run-20261108-010841-6fec10-preference",
+   "status": "PASS",
+   "checks": [
+    {
+     "metric": "recall_at_k",
+     "value": 1.0,
+     "threshold": 0.95,
+     "pass": true
+    },
+    {
+     "metric": "mrr",
+     "value": 0.9,
+     "threshold": 0.85,
+     "pass": true
+    },
+    {
+     "metric": "ndcg_at_k",
+     "value": 0.9262,
+     "threshold": 0.8762,
+     "pass": true
+    },
+    {
+     "metric": "keyword_hit",
+     "value": 1.0,
+     "threshold": 0.95,
+     "pass": true
+    }
+   ],
+   "env_warning": null
+  },
+  "preference_large": {
+   "run_id": "run-20261108-010841-6fec10-preference_large",
+   "status": "PASS",
+   "checks": [
+    {
+     "metric": "recall_at_k",
+     "value": 0.9778,
+     "threshold": 0.9278,
+     "pass": true
+    },
+    {
+     "metric": "mrr",
+     "value": 0.9,
+     "threshold": 0.85,
+     "pass": true
+    },
+    {
+     "metric": "ndcg_at_k",
+     "value": 0.9204,
+     "threshold": 0.8704,
+     "pass": true
+    },
+    {
+     "metric": "keyword_hit",
+     "value": 1.0,
+     "threshold": 0.95,
+     "pass": true
+    }
+   ],
+   "env_warning": null
+  },
+  "recall_basic_en_large": {
+   "run_id": "run-20261108-010841-6fec10-recall_basic_en_large",
+   "status": "PASS",
+   "checks": [
+    {
+     "metric": "recall_at_k",
+     "value": 1.0,
+     "threshold": 0.95,
+     "pass": true
+    },
+    {
+     "metric": "mrr",
+     "value": 0.9833,
+     "threshold": 0.9333,
+     "pass": true
+    },
+    {
+     "metric": "ndcg_at_k",
+     "value": 0.9877,
+     "threshold": 0.9377,
+     "pass": true
+    },
+    {
+     "metric": "keyword_hit",
+     "value": 1.0,
+     "threshold": 0.95,
+     "pass": true
+    }
+   ],
+   "env_warning": null
+  },
+  "recall_basic_large": {
+   "run_id": "run-20261108-010841-6fec10-recall_basic_large",
+   "status": "PASS",
+   "checks": [
+    {
+     "metric": "recall_at_k",
+     "value": 0.9708,
+     "threshold": 0.9208,
+     "pass": true
+    },
+    {
+     "metric": "mrr",
+     "value": 0.9292,
+     "threshold": 0.8792,
+     "pass": true
+    },
+    {
+     "metric": "ndcg_at_k",
+     "value": 0.9401,
+     "threshold": 0.8901,
+     "pass": true
+    },
+    {
+     "metric": "keyword_hit",
+     "value": 1.0,
+     "threshold": 0.95,
+     "pass": true
+    }
+   ],
+   "env_warning": null
+  },
+  "temporal": {
+   "run_id": "run-20261108-010841-6fec10-temporal",
+   "status": "PASS",
+   "checks": [
+    {
+     "metric": "recall_at_k",
+     "value": 1.0,
+     "threshold": 0.95,
+     "pass": true
+    },
+    {
+     "metric": "mrr",
+     "value": 0.8333,
+     "threshold": 0.7833,
+     "pass": true
+    },
+    {
+     "metric": "ndcg_at_k",
+     "value": 0.877,
+     "threshold": 0.827,
+     "pass": true
+    },
+    {
+     "metric": "keyword_hit",
+     "value": 1.0,
+     "threshold": 0.95,
+     "pass": true
+    }
+   ],
+   "env_warning": null
+  },
+  "temporal_large": {
+   "run_id": "run-20261108-010841-6fec10-temporal_large",
+   "status": "PASS",
+   "checks": [
+    {
+     "metric": "recall_at_k",
+     "value": 0.8714,
+     "threshold": 0.8214,
+     "pass": true
+    },
+    {
+     "metric": "mrr",
+     "value": 0.6274,
+     "threshold": 0.5774,
+     "pass": true
+    },
+    {
+     "metric": "ndcg_at_k",
+     "value": 0.6863,
+     "threshold": 0.6363,
+     "pass": true
+    },
+    {
+     "metric": "keyword_hit",
+     "value": 1.0,
+     "threshold": 0.95,
+     "pass": true
+    }
+   ],
+   "env_warning": null
+  }
+ },
+ "status": "PASS"
+}

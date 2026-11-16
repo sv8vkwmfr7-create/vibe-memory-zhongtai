@@ -1,0 +1,13 @@
+{
+  "project_id": "knowledge-base",
+  "name": "知识库（VibeMemory 实验知识文档）",
+  "description": "第二接入项目：实验流程复核/验收/诊断复盘的 markdown 知识文档库（39 篇），与 results/ 实验存档互补——存档记数字，知识库记结论。",
+  "license": {"spdx": null, "note": "个人知识文档，未设开源许可证，仅内部使用"},
+  "root": {"Windows": "C:/Users/ASYS/Desktop/知识库", "Linux": "/data/home/projects/知识库"},
+  "sources": [
+    {"id": "kb_docs", "kind": "markdown_dir", "path": "{project_root}", "pattern": "*.md", "required": false,
+     "desc": "实验知识文档全量（标题结构/日期范围/篇幅摘要，逐文件 SHA-256）"},
+    {"id": "kb_files", "kind": "file_dir", "path": "{project_root}", "pattern": "*", "required": false,
+     "desc": "知识库顶层文件清单（225 个文件的指纹台账）"}
+  ]
+}

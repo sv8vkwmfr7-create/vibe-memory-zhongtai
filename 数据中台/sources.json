@@ -1,0 +1,127 @@
+{
+  "_comment": "VibeMemory 数据中台 · 可信数据来源登记表。路径支持占位符 {repo}(VibeMemory 仓库根) 与 {root}(本中台根目录)。required=false 的来源缺席时降级为 missing，不阻断采集。",
+  "source_repo": "C:/Users/ASYS/Desktop/VibeMemory",
+  "sources": [
+    {
+      "id": "results_experiments",
+      "kind": "json_dir",
+      "path": "{repo}/results",
+      "pattern": "*.json",
+      "required": true,
+      "desc": "实验结果存档（MCP 维护冒烟、磁盘 soak、LoCoMo/LongMemEval 试跑等，仓库溯源惯例：顶层带 source/source_sha256/limits）"
+    },
+    {
+      "id": "coverage_xml",
+      "kind": "coverage_xml",
+      "path": "{repo}/coverage.xml",
+      "required": true,
+      "desc": "pytest-cov 覆盖率报告（行/分支覆盖率）"
+    },
+    {
+      "id": "status_md",
+      "kind": "markdown",
+      "path": "{repo}/STATUS.md",
+      "required": false,
+      "desc": "项目状态台账（能力边界、待验证事项、按日期条目）"
+    },
+    {
+      "id": "changelog_md",
+      "kind": "markdown",
+      "path": "{repo}/CHANGELOG.md",
+      "required": false,
+      "desc": "版本演进记录"
+    },
+    {
+      "id": "seed_memory",
+      "kind": "json_file",
+      "path": "{repo}/vibe_memory/seed_memory.json",
+      "required": false,
+      "desc": "出厂种子记忆（结构样本）"
+    },
+    {
+      "id": "tests_index",
+      "kind": "test_dir",
+      "path": "{repo}/tests",
+      "pattern": "test_*.py",
+      "required": true,
+      "desc": "回归测试文件清单"
+    },
+    {
+      "id": "git_activity",
+      "kind": "git_log",
+      "path": "{repo}",
+      "max_commits": 60,
+      "required": false,
+      "desc": "近期提交活动"
+    },
+    {
+      "id": "repo_meta",
+      "kind": "toml_file",
+      "path": "{repo}/pyproject.toml",
+      "required": true,
+      "desc": "项目元数据（版本、依赖、Python 要求）"
+    },
+    {
+      "id": "eval_runs",
+      "kind": "json_dir",
+      "path": "{root}/评测中台/runs",
+      "pattern": "run-*.json",
+      "required": false,
+      "origin": "评测中台",
+      "desc": "评测中台运行存档（评测即数据资产，回流数据中台）"
+    },
+    {
+      "id": "evalsets_local",
+      "kind": "jsonl_dir",
+      "path": "{root}/评测中台/evalsets",
+      "pattern": "*.jsonl",
+      "required": false,
+      "origin": "评测中台",
+      "desc": "内建+批量生成的评测集资产（用例数/类型分布/隔离题数/指纹）"
+    },
+    {
+      "id": "evalset_manifest",
+      "kind": "json_file",
+      "path": "{root}/评测中台/evalsets/gen_manifest.json",
+      "required": false,
+      "origin": "评测中台",
+      "desc": "生成评测集清单（种子/参数/逐文件指纹）"
+    },
+    {
+      "id": "benchmarks_local",
+      "kind": "jsonl_dir",
+      "path": "{root}/评测中台/benchmarks",
+      "pattern": "*.jsonl",
+      "required": false,
+      "origin": "评测中台",
+      "desc": "公开基准转换评测集（LoCoMo 10 段 / LongMemEval-S 子集）"
+    },
+    {
+      "id": "datasets_public",
+      "kind": "file_dir",
+      "path": "{root}/评测中台/datasets",
+      "pattern": "**/*",
+      "required": false,
+      "origin": "评测中台",
+      "desc": "公开基准原始数据集（LoCoMo/LongMemEval-S/PersonaMem + 指纹卡）"
+    },
+    {
+      "id": "test_runs",
+      "kind": "json_dir",
+      "path": "{root}/测试中台/runs",
+      "pattern": "test-*.json",
+      "required": false,
+      "origin": "测试中台",
+      "desc": "pytest 回归运行存档（通过率/覆盖率/失败明细/门禁，回流数据中台）"
+    },
+    {
+      "id": "obs_runs",
+      "kind": "json_dir",
+      "path": "{root}/监控中台/runs",
+      "pattern": "obs-*.json",
+      "required": false,
+      "origin": "监控中台",
+      "desc": "SDK 运行时指标存档（延迟/命中率/降级事件，回流数据中台）"
+    }
+  ]
+}

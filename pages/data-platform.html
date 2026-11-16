@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VibeMemory · 数据中台</title>
+<style>/* VibeMemory 四中台 · 亮色 SaaS 控制台主题 2.0（零依赖，与 build_pages.py 组件类配套）
+   每页主题色由 body[data-page] 驱动：data=蓝 eval=紫 test=绿 ops=橙 */
+:root {
+  --bg: #f5f6f8;
+  --bg-panel: #ffffff;
+  --bg-card: #ffffff;
+  --bg-subtle: #f9fafb;
+  --line: #e6e8ee;
+  --line-soft: #f0f1f5;
+  --accent: #2563eb;
+  --accent-strong: #1d4ed8;
+  --accent-soft: #eff6ff;
+  --c-data: #2563eb;
+  --c-data-soft: #eff6ff;
+  --c-eval: #7c3aed;
+  --c-eval-soft: #f4f0ff;
+  --c-test: #059669;
+  --c-test-soft: #e8faf3;
+  --c-ops: #ea580c;
+  --c-ops-soft: #fff3ea;
+  --theme: var(--c-data);
+  --theme-soft: var(--c-data-soft);
+  --warn: #d97706;
+  --bad: #dc2626;
+  --good: #059669;
+  --text: #101828;
+  --text-dim: #667085;
+  --text-faint: #98a2b3;
+  --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.05);
+  --shadow-md: 0 3px 10px -3px rgba(16, 24, 40, 0.12), 0 1px 2px rgba(16, 24, 40, 0.05);
+  --radius: 12px;
+}
+body[data-page="data"] { --theme: var(--c-data); --theme-soft: var(--c-data-soft); }
+body[data-page="eval"] { --theme: var(--c-eval); --theme-soft: var(--c-eval-soft); }
+body[data-page="test"] { --theme: var(--c-test); --theme-soft: var(--c-test-soft); }
+body[data-page="ops"]  { --theme: var(--c-ops);  --theme-soft: var(--c-ops-soft); }
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+html, body { background: var(--bg); color: var(--text);
+  font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif; }
+body { min-height: 100vh; font-size: 13.5px; line-height: 1.55;
+  -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+::-webkit-scrollbar { width: 9px; height: 9px; }
+::-webkit-scrollbar-thumb { background: #d3d7e0; border-radius: 8px; border: 2px solid var(--bg); }
+::-webkit-scrollbar-thumb:hover { background: #b9bfcc; }
+::-webkit-scrollbar-track { background: transparent; }
+::selection { background: var(--theme-soft); }
+
+/* ---------- 顶栏（sticky 全局导航） ---------- */
+.topbar { position: sticky; top: 0; z-index: 50; display: flex; align-items: center; gap: 14px;
+  height: 54px; padding: 0 24px; background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); flex-shrink: 0; }
+.logo { width: 30px; height: 30px; border-radius: 9px; display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, #2563eb, #7c3aed); box-shadow: 0 2px 6px -1px rgba(59, 91, 219, 0.45); }
+.logo svg { width: 17px; height: 17px; }
+.brand-t { font-size: 14.5px; font-weight: 650; letter-spacing: 0.2px; white-space: nowrap; }
+.brand-t b { color: var(--accent); font-weight: 700; }
+.nav { display: flex; gap: 2px; margin-left: 8px; overflow-x: auto; scrollbar-width: none; }
+.nav::-webkit-scrollbar { display: none; }
+.nav a { position: relative; color: var(--text-dim); text-decoration: none; font-size: 13px;
+  padding: 6px 13px; border-radius: 8px; white-space: nowrap; transition: background 0.15s, color 0.15s; }
+.nav a:hover { color: var(--text); background: var(--bg-subtle); }
+.nav a.active { color: var(--theme); background: var(--theme-soft); font-weight: 600; }
+.topbar .spacer { flex: 1; }
+.status-chip { font-family: Consolas, monospace; font-size: 11px; color: var(--text-dim);
+  background: #fff; border: 1px solid var(--line); border-radius: 999px; padding: 3px 11px; white-space: nowrap; }
+.refresh-btn { padding: 6px 14px; border-radius: 8px; font-size: 12.5px; font-weight: 600; cursor: pointer;
+  color: #fff; background: var(--theme, var(--accent)); border: 1px solid transparent; white-space: nowrap; transition: 0.15s; }
+.refresh-btn:hover { filter: brightness(1.08); }
+.refresh-btn:disabled { opacity: 0.65; cursor: wait; }
+.refresh-btn.armed { background: #fffbeb; border-color: #fde68a; color: #b45309; }
+.spin { display: inline-block; width: 12px; height: 12px; border: 2px solid rgba(255, 255, 255, 0.45);
+  border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: -2px; margin-right: 6px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---------- 内容区 ---------- */
+.wrap { max-width: 1320px; margin: 0 auto; padding: 22px 26px 60px; }
+.page-head { display: flex; align-items: flex-end; gap: 16px; padding: 4px 2px 16px; }
+.page-head h1 { font-size: 21px; font-weight: 700; letter-spacing: 0.2px; }
+.page-head h1::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 2px;
+  background: var(--theme); margin-right: 10px; vertical-align: 3px; }
+.page-head .sub { color: var(--text-dim); font-size: 13px; margin-top: 5px; }
+.page-head .spacer { flex: 1; }
+.page-head .meta { text-align: right; color: var(--text-faint); font-size: 12px; line-height: 1.7; flex-shrink: 0; }
+
+/* ---------- KPI 卡 ---------- */
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(196px, 1fr)); gap: 12px; margin-bottom: 18px; }
+.kpi { display: flex; gap: 13px; align-items: flex-start; background: var(--bg-card); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 15px 16px; box-shadow: var(--shadow-sm); transition: box-shadow 0.18s, transform 0.18s; }
+.kpi:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+.kpi .ico { flex-shrink: 0; width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center;
+  justify-content: center; background: var(--theme-soft); color: var(--theme); }
+.kpi .ico svg { width: 19px; height: 19px; }
+.kpi .body { min-width: 0; flex: 1; }
+.kpi .label { font-size: 12px; color: var(--text-dim); white-space: nowrap; }
+.kpi .value { font-size: 26px; font-weight: 700; margin-top: 3px; font-family: Consolas, "JetBrains Mono", monospace;
+  color: var(--text); font-variant-numeric: tabular-nums; letter-spacing: -0.3px; line-height: 1.15;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kpi .value .unit { font-size: 12px; color: var(--text-dim); font-weight: 500; margin-left: 3px; letter-spacing: 0; }
+.kpi .hint { font-size: 11px; color: var(--text-faint); margin-top: 5px; line-height: 1.5;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kpi.good .value { color: var(--good); }
+.kpi.warn .value { color: var(--warn); }
+.kpi.bad  .value { color: var(--bad); }
+
+/* ---------- 栅格 ---------- */
+.grid { display: grid; gap: 14px; align-items: stretch; }
+.grid > .panel { margin-bottom: 0; height: 100%; }
+.g2 { grid-template-columns: 1fr 1fr; }
+.g3 { grid-template-columns: repeat(3, 1fr); }
+.g21 { grid-template-columns: 2fr 1fr; }
+.g12 { grid-template-columns: 1fr 2fr; }
+.grid + .panel, .panel + .grid, .grid + .grid { margin-top: 14px; }
+
+/* ---------- 面板 ---------- */
+.panel { background: var(--bg-panel); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 16px 18px 14px; margin-bottom: 14px; box-shadow: var(--shadow-sm); min-width: 0; }
+.panel h2 { font-size: 13.5px; font-weight: 650; color: var(--text); display: flex; align-items: baseline;
+  flex-wrap: wrap; row-gap: 2px; gap: 8px; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--line-soft); }
+.panel h2 .tag { font-size: 11px; color: var(--text-faint); font-weight: 400; margin-left: auto; text-align: right; }
+.panel .desc { font-size: 12px; color: var(--text-dim); margin: 0 0 12px; line-height: 1.7; }
+
+/* ---------- 表格 ---------- */
+/* 卡片内独立滚动：行多的表在面板内部上下滑，表头钉在面板顶部 */
+.tbl-wrap { overflow: auto; max-height: 480px; margin: 0 -2px; padding: 0 2px;
+  scrollbar-gutter: stable; overscroll-behavior: contain; }
+table.tbl { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12.8px; }
+.tbl th { position: sticky; top: 0; z-index: 5; text-align: left; font-size: 11px; font-weight: 600;
+  color: var(--text-dim); background: var(--bg-subtle); padding: 7px 10px; border-bottom: 1px solid var(--line);
+  white-space: nowrap; box-shadow: 0 1px 0 var(--line); }
+.tbl td { padding: 8px 10px; border-bottom: 1px solid var(--line-soft); color: var(--text); vertical-align: top; }
+.tbl tbody tr { transition: background 0.1s; }
+.tbl tbody tr:hover td { background: #f7f9fc; }
+.tbl td.mono, .tbl th.mono { font-family: Consolas, "JetBrains Mono", monospace; }
+.tbl .num, .tbl th.num { text-align: right; font-family: Consolas, "JetBrains Mono", monospace;
+  font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tbl td .desc { margin: 3px 0 0; color: var(--text-faint); font-size: 11px; line-height: 1.55; }
+.tbl .ellipsis { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tbl .sub-num { font-size: 10.5px; color: var(--text-faint); font-family: inherit; }
+.tbl-empty { padding: 26px 0; text-align: center; color: var(--text-faint); font-size: 12.5px; }
+
+/* ---------- 表格增强器（app.js 注入）：搜索 / 排序 / 行展开 ---------- */
+.tbl-tools { display: flex; align-items: center; gap: 10px; margin: 0 0 10px; }
+.tbl-search-wrap { position: relative; width: 230px; max-width: 55%; }
+.tbl-search-wrap::before { content: ""; position: absolute; left: 9px; top: 50%; transform: translateY(-50%);
+  width: 13px; height: 13px; opacity: 0.55;
+  background: no-repeat center / contain url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23667085" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>'); }
+.tbl-search { width: 100%; padding: 6px 26px 6px 28px; font-size: 12.5px; border: 1px solid var(--line);
+  border-radius: 8px; background: #fff; color: var(--text); outline: none; transition: 0.15s; }
+.tbl-search:focus { border-color: var(--theme); box-shadow: 0 0 0 3px color-mix(in srgb, var(--theme) 14%, transparent); }
+.tbl-search::placeholder { color: var(--text-faint); }
+.tbl-clear { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px;
+  border: 0; border-radius: 50%; background: var(--line-soft); color: var(--text-dim); font-size: 10px;
+  line-height: 1; cursor: pointer; display: none; }
+.tbl-clear:hover { background: var(--line); }
+.tbl-tools:has(.tbl-search:not(:placeholder-shown)) .tbl-clear { display: block; }
+.tbl-count { margin-left: auto; font-size: 11.5px; color: var(--text-faint); white-space: nowrap; }
+.th-sort { cursor: pointer; user-select: none; }
+.th-sort:hover { color: var(--theme) !important; }
+.th-sort.sort-asc::after { content: " ↑"; color: var(--theme); }
+.th-sort.sort-desc::after { content: " ↓"; color: var(--theme); }
+.pgn { display: flex; gap: 8px; align-items: center; margin-top: 10px; font-size: 12px; color: var(--text-dim); }
+.pgn button { padding: 4px 12px; border: 1px solid var(--line); background: #fff; border-radius: 7px;
+  font-size: 12px; cursor: pointer; color: var(--text-dim); }
+.pgn button:hover:not(:disabled) { border-color: var(--theme); color: var(--theme); }
+.pgn button:disabled { opacity: 0.45; cursor: default; }
+
+/* 行展开：chevron 指示 + 全宽明细网格 */
+.tbl tr.has-detail { cursor: pointer; }
+.tbl tr.has-detail td:first-child::before { content: "▸"; color: var(--text-faint); margin-right: 6px;
+  font-size: 10px; display: inline-block; transition: transform 0.15s; }
+.tbl tr.has-detail:hover td:first-child::before { color: var(--theme); }
+.tbl tr.has-detail.open td:first-child::before { transform: rotate(90deg); color: var(--theme); }
+.tbl tr.detail-row td { background: var(--bg-subtle); padding: 10px 16px 12px; }
+.row-detail { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 6px 20px;
+  font-size: 11.8px; }
+.row-detail .kv { display: flex; gap: 8px; min-width: 0; align-items: baseline; }
+.row-detail .kv span { color: var(--text-faint); flex-shrink: 0; }
+.row-detail .kv b { color: var(--text); font-family: Consolas, "JetBrains Mono", monospace;
+  font-weight: 500; word-break: break-all; }
+svg [data-tip] { cursor: pointer; }
+svg rect[data-tip]:hover, svg circle[data-tip]:hover { stroke: #101828; stroke-width: 1.5px; }
+.kpi[data-target] { cursor: pointer; }
+@keyframes flash-ring { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--theme) 45%, transparent); }
+  100% { box-shadow: 0 0 0 16px transparent; } }
+.panel.flash { animation: flash-ring 0.9s ease-out 1; }
+
+/* ---------- 徽标 ---------- */
+.badge { display: inline-block; padding: 1px 8px; border-radius: 20px; font-size: 10.8px; line-height: 1.7;
+  border: 1px solid; white-space: nowrap; font-weight: 500; }
+.badge.ok   { color: #047857; border-color: #a7f3d0; background: #ecfdf5; }
+.badge.warn { color: #b45309; border-color: #fde68a; background: #fffbeb; }
+.badge.bad  { color: #b91c1c; border-color: #fecaca; background: #fef2f2; }
+.badge.info { color: #1d4ed8; border-color: #bfdbfe; background: #eff6ff; }
+.badge.dim  { color: #4b5563; border-color: var(--line); background: var(--bg-subtle); }
+.badge.themed { color: var(--theme); border-color: color-mix(in srgb, var(--theme) 30%, #fff); background: var(--theme-soft); }
+
+/* ---------- 图表 ---------- */
+.chart-box { width: 100%; min-width: 0; }
+.chart-box svg { display: block; width: 100%; height: auto; }
+svg text { font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; }
+.axis { stroke: #d1d5db; stroke-width: 1; }
+.gridline { stroke: var(--line-soft); stroke-width: 1; }
+.tick-label { fill: var(--text-faint); font-size: 10.5px; }
+.legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 11.5px; color: var(--text-dim); margin-top: 8px; }
+.legend .sw { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+
+/* ---------- 流程链路 ---------- */
+.flow { display: flex; align-items: stretch; gap: 0; overflow-x: auto; padding: 4px 0 2px; }
+.flow .stage { flex: 1; min-width: 148px; background: var(--bg-subtle); border: 1px solid var(--line);
+  border-radius: 10px; padding: 11px 13px; transition: border-color 0.15s, background 0.15s; }
+.flow .stage:hover { border-color: color-mix(in srgb, var(--theme) 35%, var(--line)); background: var(--theme-soft); }
+.flow .stage h3 { font-size: 12.3px; color: var(--theme); margin-bottom: 7px; font-weight: 650; }
+.flow .stage ul { list-style: none; font-size: 11.3px; color: var(--text-dim); line-height: 1.85; }
+.flow .arrow { display: flex; align-items: center; padding: 0 7px; color: var(--text-faint); font-size: 14px; flex-shrink: 0; }
+.src-card { background: var(--bg-subtle); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+.src-card .name { font-family: Consolas, monospace; font-size: 12.5px; color: var(--text); word-break: break-all; }
+.src-card .row { font-size: 11.5px; color: var(--text-dim); margin-top: 5px; display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ---------- 信号网格卡 ---------- */
+.sig-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 10px; }
+.sig-card { display: flex; align-items: flex-start; gap: 10px; border: 1px solid var(--line);
+  border-radius: 10px; padding: 10px 13px; background: #fff; }
+.sig-card.lv-ok { border-left: 3px solid var(--good); }
+.sig-card.lv-warn { border-left: 3px solid var(--warn); background: #fffdf7; }
+.sig-card.lv-bad { border-left: 3px solid var(--bad); background: #fff8f8; }
+.sig-card .dot { flex-shrink: 0; width: 8px; height: 8px; border-radius: 50%; margin-top: 6px; }
+.sig-card.lv-ok .dot { background: var(--good); box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.14); }
+.sig-card.lv-warn .dot { background: var(--warn); box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.16); }
+.sig-card.lv-bad .dot { background: var(--bad); box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.16); }
+.sig-card .txt { min-width: 0; font-size: 12px; line-height: 1.55; }
+.sig-card .code { font-family: Consolas, monospace; font-size: 11px; color: var(--text); font-weight: 600; }
+.sig-card .detail { color: var(--text-dim); margin-top: 2px; }
+
+/* ---------- 门户卡片入口 ---------- */
+.entry { display: flex; flex-direction: column; overflow: hidden; padding: 0; }
+.entry .entry-head { display: flex; align-items: center; gap: 11px; padding: 14px 18px 0; }
+.entry .entry-ico { flex-shrink: 0; width: 38px; height: 38px; border-radius: 10px; display: flex;
+  align-items: center; justify-content: center; background: var(--theme-soft); color: var(--theme); }
+.entry .entry-ico svg { width: 20px; height: 20px; }
+.entry .entry-t { font-size: 14.5px; font-weight: 650; }
+.entry .entry-en { font-size: 11px; color: var(--text-faint); font-weight: 400; }
+.entry .desc { padding: 10px 18px 0; }
+.entry ul { list-style: none; padding: 10px 18px 0; font-size: 12.3px; color: var(--text-dim); line-height: 1.9; flex: 1; }
+.entry ul li::before { content: ""; display: inline-block; width: 5px; height: 5px; border-radius: 50%;
+  background: var(--theme); opacity: 0.65; margin-right: 8px; vertical-align: 2.5px; }
+.entry .card-cta { margin: 12px 18px 14px; align-self: flex-start; }
+.card-cta { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px;
+  border-radius: 8px; background: var(--theme-soft); color: var(--theme); font-size: 12.5px;
+  font-weight: 600; text-decoration: none; border: 1px solid transparent; transition: 0.15s; }
+.card-cta:hover { background: var(--theme); color: #fff; }
+
+/* ---------- 返回顶部 ---------- */
+.to-top { position: fixed; right: 22px; bottom: 22px; z-index: 60; width: 38px; height: 38px;
+  border-radius: 50%; border: 1px solid var(--line); background: #fff; color: var(--text-dim);
+  font-size: 15px; cursor: pointer; box-shadow: var(--shadow-md); opacity: 0; pointer-events: none;
+  transition: opacity 0.2s, transform 0.2s; transform: translateY(6px); }
+.to-top.show { opacity: 1; pointer-events: auto; transform: none; }
+.to-top:hover { color: var(--theme); border-color: var(--theme); }
+
+/* ---------- 其他 ---------- */
+.footer { margin-top: 26px; color: var(--text-faint); font-size: 11.5px; text-align: center; line-height: 1.8; }
+.footer a { color: var(--accent); text-decoration: none; }
+.progress { height: 6px; border-radius: 3px; background: #edeff3; overflow: hidden; min-width: 70px; }
+.progress i { display: block; height: 100%; border-radius: 3px; background: var(--theme); transition: width 0.3s; }
+.big-num { font-family: Consolas, monospace; font-size: 34px; font-weight: 700; color: var(--good); }
+details.tblwrap summary { cursor: pointer; color: var(--accent-strong); font-size: 12px; margin-top: 10px; user-select: none; }
+.crumbs { font-size: 12px; color: var(--text-faint); margin-bottom: 14px; }
+.crumbs a { color: var(--accent); text-decoration: none; }
+.nowrap { white-space: nowrap; }
+
+/* ---------- 响应式 ---------- */
+@media (max-width: 1080px) { .g2, .g3, .g21, .g12 { grid-template-columns: 1fr; } }
+@media (max-width: 860px) {
+  .topbar { flex-wrap: wrap; height: auto; padding: 10px 16px; row-gap: 8px; }
+  .nav { order: 3; width: 100%; margin-left: 0; }
+  .wrap { padding: 16px 14px 48px; }
+  .page-head { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .page-head .meta { text-align: left; }
+  .sig-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body data-page="data">
+<header class="topbar">
+  <a class="brand" href="index.html"><span class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round"><path d="m12 3 9 5-9 5-9-5z"/><path d="m4.6 12.6 7.4 4.1 7.4-4.1"/><path d="m4.6 16.6 7.4 4.1 7.4-4.1" opacity="0.55"/></svg></span><span class="brand-t">VibeMemory <b>四中台</b></span></a>
+  <nav class="nav"><a href="index.html">门户</a><a href="data-platform.html" class="active">数据中台</a><a href="eval-platform.html">评测中台</a><a href="test-platform.html">测试中台</a><a href="ops-platform.html">监控中台</a></nav>
+  <div class="spacer"></div>
+  <span id="status-chip" class="status-chip" style="display:none"></span>
+  <button id="refresh-btn" class="refresh-btn" style="display:none">⟳ 刷新数据</button>
+</header>
+<main class="wrap">
+  <div class="page-head">
+    <div>
+      <h1>数据中台</h1>
+      <div class="sub">数据汇聚 → 分层加工 → 质量治理 → 资产目录 → 统一出口</div>
+    </div>
+    <div class="meta">生成时间：2026-11-12 01:58:45<br>数据内嵌 · 离线可开</div>
+  </div>
+  
+  <div class="kpis">
+    <div class="kpi good" data-target="p-srcs" title="点击跳转到对应面板"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.5-3.2 7.7-8 9-4.8-1.3-8-4.5-8-9V6z"/><path d="m9 12 2 2 4-4"/></svg></div><div class="body"><div class="label">可信数据来源</div><div class="value">21<span class="unit">/ 21</span></div><div class="hint">采集校验全部通过</div></div></div>
+    <div class="kpi " data-target="p-assets" title="点击跳转到对应面板"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="m12 3 9 5-9 5-9-5z"/><path d="m3.6 12.6 8.4 4.7 8.4-4.7"/><path d="m3.6 16.8 8.4 4.7 8.4-4.7" opacity="0.55"/></svg></div><div class="body"><div class="label">数据资产数</div><div class="value">16</div><div class="hint">ODS / DWD / DWS 三层</div></div></div>
+    <div class="kpi " data-target="p-chart" title="点击跳转到对应面板"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><ellipse cx="12" cy="5.5" rx="8" ry="3"/><path d="M4 5.5v6c0 1.66 3.58 3 8 3s8-1.34 8-3v-6"/><path d="M4 11.5v6c0 1.66 3.58 3 8 3s8-1.34 8-3v-6"/></svg></div><div class="body"><div class="label">资产记录总量</div><div class="value">18,699</div><div class="hint">明细与汇总条目</div></div></div>
+    <div class="kpi good" data-target="p-quality" title="点击跳转到对应面板"><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 19a9 9 0 1 1 14 0"/><path d="M12 13l4.2-4.2"/><circle cx="12" cy="14" r="1.6" fill="currentColor" stroke="none"/></svg></div><div class="body"><div class="label">数据质量综合分</div><div class="value">0.996</div><div class="hint">阈值 0.85 · PASS</div></div></div>
+    <div class="kpi "><div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg></div><div class="body"><div class="label">最近采集</div><div class="value">11-12 01:58</div><div class="hint">collect.py 每次比对指纹</div></div></div>
+  </div>
+
+  <div class="panel">
+    <h2>数据汇聚 · 全链路血缘 <span class="tag">六层架构：汇聚 → 存储 → 开发 → 资产治理 → 服务 → 应用</span></h2>
+    <div class="flow">
+      <div class="stage"><h3>① 可信来源（9 类）</h3><ul>
+        <li>results/*.json 实验存档</li><li>coverage.xml 覆盖率</li><li>STATUS / CHANGELOG</li>
+        <li>seed_memory · tests · git · pyproject</li><li>评测中台 runs（回流）</li></ul></div>
+      <div class="arrow">→</div>
+      <div class="stage"><h3>② 采集 collect.py</h3><ul><li>存在性校验</li><li>SHA-256 指纹</li>
+        <li>记录数 / 大小 / mtime</li><li>变更检测</li></ul></div>
+      <div class="arrow">→</div>
+      <div class="stage"><h3>③ ODS 原始层</h3><ul><li>结构化快照</li><li>大文件标量摘要</li><li>溯源档案 provenance</li></ul></div>
+      <div class="arrow">→</div>
+      <div class="stage"><h3>④ DWD 明细层</h3><ul><li>清洗 / 规范化</li><li>统一记录模型</li></ul></div>
+      <div class="arrow">→</div>
+      <div class="stage"><h3>⑤ DWS 汇总层</h3><ul><li>仓库健康主题</li><li>核心实验指标</li><li>评测结果主题</li></ul></div>
+      <div class="arrow">→</div>
+      <div class="stage"><h3>⑥ 数据应用</h3><ul><li>本页大屏</li><li>评测中台门禁</li></ul></div>
+    </div>
+  </div>
+
+  <div class="grid g21">
+    <div class="panel">
+      <h2>可信数据来源清单 <span id="p-srcs" class="tag">指纹可追溯 · 变更可检测 · 3 个项目接入</span></h2>
+      <div class="tbl-wrap"><table class="tbl" data-enhance><thead><tr><th>来源 ID</th><th>项目</th><th>类型</th><th>路径</th><th>规模</th><th>SHA-256</th><th>状态</th><th>采集时间</th></tr></thead>
+      <tbody><tr data-detail='{&quot;完整路径&quot;: &quot;C:\\Users\\ASYS\\Desktop\\codex-zcode-team\\events.jsonl&quot;, &quot;SHA-256&quot;: &quot;5c593c0169db671053f03f356432addc848b8cfe5077ba354631101404cf8b2a&quot;, &quot;项目&quot;: &quot;Codex-ZCode 多智能体协作&quot;, &quot;类型&quot;: &quot;jsonl_file&quot;, &quot;规模&quot;: &quot;11 个文件&quot;, &quot;采集时间&quot;: &quot;2026-11-12T01:58:12+08:00&quot;}'><td class='mono'>cz_events</td><td class='nowrap'><span class='badge dim' title='Codex-ZCode 多智能体协作'>codex-zcode-team</span></td><td><span class='badge info'>jsonl_file</span></td><td class='mono' title='C:\Users\ASYS\Desktop\codex-zcode-team\events.jsonl'><div class='ellipsis' style='max-width:150px;font-size:11px'>codex-zcode-team/events.jsonl</div></td><td class='num'><b>11</b> <span class='sub-num'>文件</span></td><td class='mono' title='5c593c0169db671053f03f356432addc848b8cfe5077ba354631101404cf8b2a' style='font-size:11px'>5c593c0169…</td><td class='nowrap'><span class="badge ok">正常</span> <span class="badge dim">未变更</span></td><td class='mono' style='font-size:11px'>11-12 01:58</td></tr><tr data-detail='{&quot;完整路径&quot;: &quot;C:\\Users\\ASYS\\Desktop\\codex-zcode-team\\doctor.json&quot;, &quot;SHA-256&quot;: &quot;2df4d6b78ee5dc799a60a931dd785f37ab174d25e3aeb31bc2115a1ad2cb20b1&quot;, &quot;项目&quot;: &quot;Codex-ZCode 多智能体协作&quot;, &quot;类型&quot;: &quot;json_file&quot;, &quot;规模&quot;: &quot;0 KB&quot;, &quot;采集时间&quot;: &quot;2026-11-12T01:58:12+08:00&quot;}'><td class='mono'>cz_doctor</td><td class='nowrap'><span class='badge dim' title='Codex-ZCode 多智能体协作'>codex-zcode-team</span></td><td><span class='badge info'>json_file</span></td><td class='mono' title='C:\Users\ASYS\Desktop\codex-zcode-team\doctor.json'><div class='ellipsis' style='max-width:150px;font-size:11px'>codex-zcode-team/doctor.json</div></td><td class='num'><b>0</b> <span class='sub-num'>KB</span></td><td class='mono' title='2df4d6b78ee5dc799a60a931dd785f37ab174d25e3aeb31bc2115a1ad2cb20b1' style='font-size:11px'>2df4d6b78e…</td><td class='nowrap'><span class="badge ok">正常</span> <span class="badge dim">未变更</span></td><td class='mono' style='font-size:11px'>11-12 01:58</td></tr><tr data-detail='{&quot;完整路径&quot;: &quot;C:\\Users\\ASYS\\Desktop\\codex-zcode-team&quot;, &quot;SHA-256&quot;: &quot;-&quot;, &quot;项目&quot;: &quot;Codex-ZCode 多智能体协作&quot;, &quot;类型&quot;: &quot;markdown_dir&quot;, &quot;规模&quot;: &quot;6 个文件&quot;, &quot;采集时间&quot;: &quot;2026-11-12T01:58:12+08:00&quot;}'><td class='mono'>cz_docs</td><td class='nowrap'><span class='badge dim' title='Codex-ZCode 多智能体协作'>codex-zcode-team</span></td><td><span class='badge info'>markdown_dir</span></td><td class='mono' title='C:\Users\ASYS\Desktop\codex-zcode-team'><div class='ellipsis' style='max-width:150px;font-size:11px'>Desktop/codex-zcode-team</div></td><td class='num'><b>6</b> <span class='sub-num'>文件</span></td><td class='mono' title='' style='font-size:11px'>-</td><td class='nowrap'><span class="badge ok">正常</span> </td><td class='mono' style='font-size:11px'>11-12 01:58</td></tr><tr data-detail='{&quot;完整路径&quot;: &quot;C:\\Users\\ASYS\\Desktop\\知识库&quot;, &quot;SHA-256&quot;: &quot;-&quot;, &quot;项目&quot;: &quot;知识库（VibeMemory 实验知识文档）&quot;, &quot;类型&quot;: &quot;markdown_dir&quot;, &quot;规模&quot;: &quot;40 个文件&quot;, &quot;采集时间&quot;: &quot;2026-11-12T01:58:12+08:00&quot;}'><td class='mono'>kb_docs</td><td class='nowrap'><span class='badge dim' title='知识库（VibeMemory 实验知识文档）'>knowledge-base</span></td><td><span class='badge info'>markdown_dir</span></td><td class='mono' title='C:\Users\ASYS\Desktop\知识库'><div class='ellipsis' style='max-width:150px;font-size:11px'>Desktop/知识库</div></td><td class='num'><b>40</b> <span class='sub-num'>文件</span></td><td class='mono' title='' style='font-size:11px'>-</td><td class='nowrap'><span class="badge ok">正常</span> </td><td class='mono' style='font-size:11px'>11-12 01:58</td></tr><tr data-detail='{&quot;完整路径&quot;: &quot;C:\\Users\\ASYS\\Desktop\\知识库&quot;, &quot;SHA-256&quot;: &quot;-&quot;, &quot;项目&quot;: &quot;知识库（VibeMemory 实验知识文档）&quot;, &quot;类型&quot;: &quot;file_dir&quot;, &quot;规模&quot;: &quot;227 个文件&quot;, &quot;采集时间&quot;: &quot;2026-11-12T01:58:12+08:00&quot;}'><td class='mono'>kb_files</td><td class='nowrap'><span class='badge dim' title='知识库（VibeMemory 实验知识文档）'>knowledge-base</span></td><td><span class='badge info'>file_dir</span></td><td class='mono' title='C:\Users\ASYS\Desktop\知识库'><div class='ellipsis' style='max-width:150px;font-size:11px'>Desktop/知识库</div></td><td class='num'><b>227</b> <span class='sub-num'>文件</span></td><td class='mono' title='' style='font-size:11px'>-</td><td class='nowrap'><span class="badge ok">正常</span> </td><td class='mono' style='font-size:11px'>11-12 01:58</td></tr><tr data-detail='{&quot;完整路径&quot;: &quot;C:\\Users\\ASYS\\Desktop\\VibeMemory\\results&quot;, &quot;SHA-256&quot;: &quot;-&quot;, &quot;项目&quot;: &quot;VibeMemory 图记忆 SDK&quot;, &quot;类型&quot;: &quot;json_dir&quot;, &quot;规模&quot;: &quot;168 个文件&quot;, &quot;采集时间&quot;: &quot;2026-11-12T01:58:13+08:00&quot;}'><td class='mono'>results_experiments</td><td class='nowrap'><span class='badge dim' title='VibeMemory 图记忆 SDK'>vibememory</span></td><td><span class='badge info'>json_dir</span></td><td class='mono' title='C:\Users\ASYS\Desktop\VibeMemory\results'><div class='ellipsis' style='max-width:150px;font-size:11px'>VibeMemory/results</div></td><td class='num'><b>168</b> <span class='sub-num'>文件</span></td><td class='mono' title='' style='font-size:11px'>-</td><td class='nowrap'><span class="badge ok">正常</span> </td><td class='mono' style='font-size:11px'>11-12 01:58</td></tr><tr data-detail='{&quot;完整路径&quot;: &quot;C:\\Users\\ASYS\\Desktop\\VibeMemory\\coverage.xml&quot;, &quot;SHA-256&quot;: &quot;070e9e5a28c61a6d8754ff5e520ab8679ca1131ec24b24d7f3c478bdde0b2aa2&quot;, &quot;项目&quot;: &quot;VibeMemory 图记忆 SDK&quot;, &quot;类型&quot;: &quot;coverage_xml&quot;, &quot;规模&quot;: &quot;238 KB&quot;, &quot;采集时间&quot;: &quot;2026-11-12T01:58:13+08:00&quot;}'><td class='mono'>coverage_xml</td><td class='nowrap'><span class='badge dim' title='VibeMemory 图记忆 SDK'>vibememory</span></td><td><span class='badge info'>coverage_xml</span></td><td class='mono' title='C:\Users\ASYS\Desktop\VibeMemory\coverage.xml'><div class='ellipsis' style='max-width:150px;font-size:11px'>VibeMemory/coverage.xml</div></td><td class='num'><b>238</b> <span class='sub-num'>KB</span></td><td class='mono' title='070e9e5a28c61a6d8754ff5e520ab8679ca1131ec24b24d7f3c478bdde0b2aa2' style='font-size:11px'>070e9e5a28…</td><td class='nowrap'><span class="badge ok">正常</span> <span class="badge dim">未变更</span></td><td class='mono' style='font-size:11px'>11-12 01:58</td></tr><tr data-detail='{&quot;完整路径&quot;: &quot;C:\\Users\\ASYS\\Desktop\\VibeMemory\\STATUS.md&quot;, &quot;SHA-256&quot;: &quot;8e6ebfee6860eaaeab2b6055a6c62609632ee010fe49381e32d3a0bc29f5a666&quot;, &quot;项目&quot;: &quot;VibeMemory 图记忆 SDK&quot;, &quot;类型&quot;: &quot;markdown&quot;, &quot;规模&quot;: &quot;122 KB&quot;, &quot;采集时间&quot;: &quot;2026-11-12T01:58:13+08:00&quot;}'><td class='mono'>status_md</td><td class='nowrap'><span class='badge dim' title='VibeMemory 图记忆 SDK'>vibememory</span></td><td><span class='badge info'>markdown</span></td><td class='mono' title='C:\Users\ASYS\Desktop\VibeMemory\STATUS.md'><div class='ellipsis' style='max-width:150px;font-size:11px'>VibeMemory/STATUS.md</div></td><td class='num'><b>122</b> <span class='sub-num'>KB</span></td><td class='mono' title='8e6ebfee6860eaaeab2b6055a6c62609632ee010fe49381e32d3a0bc29f5a666' style='font-size:11px'>8e6ebfee68…</td><td class='nowrap'><span class="badge ok">正常</span> <span class="badge dim">未变更</span></td><td class='mono' style='font-size:11px'>11-12 01:58</td></tr><tr data-detail='{&quot;完整路径&quot;: &quot;C:\\Users\\ASYS\\Desktop\\VibeMemory\\CHANGELOG.md&quot;, &quot;SHA-256&quot;: &quot;d70b59bb48aab24e742ed8394dd3c3d7ee1cbeb4a0d2ce08248f0ec84ad1a775&quot;, &quot;项目&quot;: &quot;VibeMemory 图记忆 SDK&quot;, &quot;类型&quot;: &quot;markdown&quot;, &quot;规模&quot;: &quot;8 KB&quot;, &quot;采集时间&quot;: &quot;2026-11-12T01:58:13+08:00&quot;}'><td class='mono'>changelog_md</td><td class='nowrap'><span class='badge dim' title='VibeMemory 图记忆 SDK'>vibememory</span></td><td><span class='badge info'>markdown</span></td><td class='mono' title='C:\Users\ASYS\Desktop\VibeMemory\CHANGELOG.md'><div class='ellipsis' style='max-width:150px;font-size:11px'>VibeMemory/CHANGELOG.md</div></td><td class='num'><b>8</b> <span class='sub-num'>KB</span></td><td class='mono' title='d70b59bb48aab24e742ed8394dd3c3d7ee1cbeb4a0d2ce08248f0ec84ad1a775' style='font-size:11px'>d70b59bb48…</td><td class='nowrap'><span class="badge ok">正常</span> <span class="badge dim">未变更</span></td><td class='mono' style='font-size:11px'>11-12 01:58</td></tr><tr data-detail='{&quot;完整路径&quot;: &quot;C:\\Users\\ASYS\\Desktop\\VibeMemory\\vibe_memory\\seed_memory.json&quot;, &quot;SHA-256&quot;: &quot;39d2e9fb876599f9f32922657cb7a717f9d96c5afe3b000487f4ad0e5b11f8d2&quot;, &quot;项目&quot;: &quot;VibeMemory 图记忆 SDK&quot;, &quot;类型&quot;: &quot;json_file&quot;, &quot;规模&quot;: &quot;2 KB&quot;, &quot;采集时间&quot;: &quot;2026-11-12T01:58:13+08:00&quot;}'><td class='mono'>seed_memory</td><td class='nowrap'><span class='badge dim' title='VibeMemory 图记忆 SDK'>vibememory</span></td><td><span class='badge info'>json_file</span></td><td class='mono' title='C:\Users\ASYS\Desktop\VibeMemory\vibe_memory\seed_memory.json'><div class='ellipsis' style='max-width:150px;font-size:11px'>vibe_memory/seed_memory.json</div></td><td class='num'><b>2</b> <span class='sub-num'>KB</span></td><td class='mono' title='39d2e9fb876599f9f32922657cb7a717f9d96c5afe3b000487f4ad0e5b11f8d2' style='font-size:11px'>39d2e9fb87…</td><td class='nowrap'><span class="badge ok">正常</span> <span class="badge dim">未变更</span></td><td class='mono' style='font-size:11px'>11-12 01:58</td></tr><tr data-detail='{&quot;完整路径&quot;: &quot;C:\\Users\\ASYS\\Desktop\\VibeMemory\\tests&quot;, &quot;SHA-256&quot;: &quot;-&quot;, &quot;项目&quot;: &quot;VibeMemory 图记忆 SDK&quot;, &quot;类型&quot;: &quot;test_dir&quot;, &quot;规模&quot;: &quot;-&quot;, &quot;采集时间&quot;: &quot;2026-11-12T01:58:13+08:00&quot;}'><td class='mono'>tests_index</td><td class='nowrap'><span class='badge dim' title='VibeMemory 图记忆 SDK'>vibememory</span></td><td><span class='badge info'>test_dir</span></td><td class='mono' title='C:\Users\ASYS\Desktop\VibeMemory\tests'><div class='ellipsis' style='max-width:150px;font-size:11px'>VibeMemory/tests</div></td><td class='num'>-</td><td class='mono' title='' style='font-size:11px'>-</td><td class='nowrap'><span class="badge ok">正常</span> </td><td class='mono' style='font-size:11px'>11-12 01:58</td></tr><tr data-detail='{&quot;完整路径&quot;: &quot;C:\\Users\\ASYS\\Desktop\\VibeMemory&quot;, &quot;SHA-256&quot;: &quot;-&quot;, &quot;项目&quot;: &quot;VibeMemory 图记忆 SDK&quot;, &quot;类型&quot;: &quot;git_log&quot;, &quot;规模&quot;: &quot;-&quot;, &quot;采集时间&quot;: &quot;2026-11-12T01:58:13+08:00&quot;}'><td class='mono'>git_activity</td><td class='nowrap'><span class='badge dim' title='VibeMemory 图记忆 SDK'>vibememory</span></td><td><span class='badge info'>git_log</span></td><td class='mono' title='C:\Users\ASYS\Desktop\VibeMemory'><div class='ellipsis' style='max-width:150px;font-size:11px'>Desktop/VibeMemory</div></td><td class='num'>-</td><td class='mono' title='' style='font-size:11px'>-</td><td class='nowrap'><span class="badge ok">正常</span> </td><td class='mono' style='font-size:11px'>11-12 01:58</td></tr><tr data-detail='{&quot;完整路径&quot;: &quot;C:\\Users\\ASYS\\Desktop\\VibeMemory\\pyproject.toml&quot;, &quot;SHA-256&quot;: &quot;a60e44b150cc07f78c34b8ed85e14554fe6ccd8f222da34879d34ee1fdbf21cc&quot;, &quot;项目&quot;: &quot;VibeMemory 图记忆 SDK&quot;, &quot;类型&quot;: &quot;toml_file&quot;, &quot;规模&quot;: &quot;2 KB&quot;, &quot;采集时间&quot;: &quot;2026-11-12T01:58:13+08:00&quot;}'><td class='mono'>repo_meta</td><td class='nowrap'><span class='badge dim' title='VibeMemory 图记忆 SDK'>vibememory</span></td><td><span class='badge info'>toml_file</span></td><td class='mono' title='C:\Users\ASYS\Desktop\VibeMemory\pyproject.toml'><div class='ellipsis' style='max-width:150px;font-size:11px'>VibeMemory/pyproject.toml</div></td><td class='num'><b>2</b> <span class='sub-num'>KB</span></td><td class='mono' title='a60e44b150cc07f78c34b8ed85e14554fe6ccd8f222da34879d34ee1fdbf21cc' style='font-size:11px'>a60e44b150…</td><td class='nowrap'><span class="badge ok">正常</span> <span class="badge dim">未变更</span></td><td class='mono' style='font-size:11px'>11-12 01:58</td></tr><tr data-detail='{&quot;完整路径&quot;: &quot;C:\\Users\\ASYS\\Desktop\\VibeMemory-中台\\评测中台\\runs&quot;, &quot;SHA-256&quot;: &quot;-&quot;, &quot;项目&quot;: &quot;VibeMemory 图记忆 SDK&quot;, &quot;类型&quot;: &quot;json_dir&quot;, &quot;规模&quot;: &quot;109 个文件&quot;, &quot;采集时间&quot;: &quot;2026-11-12T01:58:13+08:00&quot;}'><td class='mono'>eval_runs</td><td class='nowrap'><span class='badge dim' title='VibeMemory 图记忆 SDK'>vibememory</span></td><td><span class='badge info'>json_dir</span></td><td class='mono' title='C:\Users\ASYS\Desktop\VibeMemory-中台\评测中台\runs'><div class='ellipsis' style='max-width:150px;font-size:11px'>评测中台/runs</div></td><td class='num'><b>109</b> <span class='sub-num'>文件</span></td><td class='mono' title='' style='font-size:11px'>-</td><td class='nowrap'><span class="badge ok">正常</span> </td><td class='mono' style='font-size:11px'>11-12 01:58</td></tr><tr data-detail='{&quot;完整路径&quot;: &quot;C:\\Users\\ASYS\\Desktop\\VibeMemory-中台\\评测中台\\runs&quot;, &quot;SHA-256&quot;: &quot;-&quot;, &quot;项目&quot;: &quot;VibeMemory 图记忆 SDK&quot;, &quot;类型&quot;: &quot;json_dir&quot;, &quot;规模&quot;: &quot;12 个文件&quot;, &quot;采集时间&quot;: &quot;2026-11-12T01:58:13+08:00&quot;}'><td class='mono'>ans_runs</td><td class='nowrap'><span class='badge dim' title='VibeMemory 图记忆 SDK'>vibememory</span></td><td><span class='badge info'>json_dir</span></td><td class='mono' title='C:\Users\ASYS\Desktop\VibeMemory-中台\评测中台\runs'><div class='ellipsis' style='max-width:150px;font-size:11px'>评测中台/runs</div></td><td class='num'><b>12</b> <span class='sub-num'>文件</span></td><td class='mono' title='' style='font-size:11px'>-</td><td class='nowrap'><span class="badge ok">正常</span> </td><td class='mono' style='font-size:11px'>11-12 01:58</td></tr><tr data-detail='{&quot;完整路径&quot;: &quot;C:\\Users\\ASYS\\Desktop\\VibeMemory-中台\\评测中台\\evalsets&quot;, &quot;SHA-256&quot;: &quot;-&quot;, &quot;项目&quot;: &quot;VibeMemory 图记忆 SDK&quot;, &quot;类型&quot;: &quot;jsonl_dir&quot;, &quot;规模&quot;: &quot;14 个文件&quot;, &quot;采集时间&quot;: &quot;2026-11-12T01:58:13+08:00&quot;}'><td class='mono'>evalsets_local</td><td class='nowrap'><span class='badge dim' title='VibeMemory 图记忆 SDK'>vibememory</span></td><td><span class='badge info'>jsonl_dir</span></td><td class='mono' title='C:\Users\ASYS\Desktop\VibeMemory-中台\评测中台\evalsets'><div class='ellipsis' style='max-width:150px;font-size:11px'>评测中台/evalsets</div></td><td class='num'><b>14</b> <span class='sub-num'>文件</span></td><td class='mono' title='' style='font-size:11px'>-</td><td class='nowrap'><span class="badge ok">正常</span> </td><td class='mono' style='font-size:11px'>11-12 01:58</td></tr><tr data-detail='{&quot;完整路径&quot;: &quot;C:\\Users\\ASYS\\Desktop\\VibeMemory-中台\\评测中台\\evalsets\\gen_manifest.json&quot;, &quot;SHA-256&quot;: &quot;1518d64a0841e29ca36a8d55ae374e068e1c9382f4a41e65b60737f89d614ce6&quot;, &quot;项目&quot;: &quot;VibeMemory 图记忆 SDK&quot;, &quot;类型&quot;: &quot;json_file&quot;, &quot;规模&quot;: &quot;2 KB&quot;, &quot;采集时间&quot;: &quot;2026-11-12T01:58:13+08:00&quot;}'><td class='mono'>evalset_manifest</td><td class='nowrap'><span class='badge dim' title='VibeMemory 图记忆 SDK'>vibememory</span></td><td><span class='badge info'>json_file</span></td><td class='mono' title='C:\Users\ASYS\Desktop\VibeMemory-中台\评测中台\evalsets\gen_manifest.json'><div class='ellipsis' style='max-width:150px;font-size:11px'>evalsets/gen_manifest.json</div></td><td class='num'><b>2</b> <span class='sub-num'>KB</span></td><td class='mono' title='1518d64a0841e29ca36a8d55ae374e068e1c9382f4a41e65b60737f89d614ce6' style='font-size:11px'>1518d64a08…</td><td class='nowrap'><span class="badge ok">正常</span> <span class="badge dim">未变更</span></td><td class='mono' style='font-size:11px'>11-12 01:58</td></tr><tr data-detail='{&quot;完整路径&quot;: &quot;C:\\Users\\ASYS\\Desktop\\VibeMemory-中台\\评测中台\\benchmarks&quot;, &quot;SHA-256&quot;: &quot;-&quot;, &quot;项目&quot;: &quot;VibeMemory 图记忆 SDK&quot;, &quot;类型&quot;: &quot;jsonl_dir&quot;, &quot;规模&quot;: &quot;16 个文件&quot;, &quot;采集时间&quot;: &quot;2026-11-12T01:58:13+08:00&quot;}'><td class='mono'>benchmarks_local</td><td class='nowrap'><span class='badge dim' title='VibeMemory 图记忆 SDK'>vibememory</span></td><td><span class='badge info'>jsonl_dir</span></td><td class='mono' title='C:\Users\ASYS\Desktop\VibeMemory-中台\评测中台\benchmarks'><div class='ellipsis' style='max-width:150px;font-size:11px'>评测中台/benchmarks</div></td><td class='num'><b>16</b> <span class='sub-num'>文件</span></td><td class='mono' title='' style='font-size:11px'>-</td><td class='nowrap'><span class="badge ok">正常</span> </td><td class='mono' style='font-size:11px'>11-12 01:58</td></tr><tr data-detail='{&quot;完整路径&quot;: &quot;C:\\Users\\ASYS\\Desktop\\VibeMemory-中台\\评测中台\\datasets&quot;, &quot;SHA-256&quot;: &quot;-&quot;, &quot;项目&quot;: &quot;VibeMemory 图记忆 SDK&quot;, &quot;类型&quot;: &quot;file_dir&quot;, &quot;规模&quot;: &quot;4010 个文件&quot;, &quot;采集时间&quot;: &quot;2026-11-12T01:58:15+08:00&quot;}'><td class='mono'>datasets_public</td><td class='nowrap'><span class='badge dim' title='VibeMemory 图记忆 SDK'>vibememory</span></td><td><span class='badge info'>file_dir</span></td><td class='mono' title='C:\Users\ASYS\Desktop\VibeMemory-中台\评测中台\datasets'><div class='ellipsis' style='max-width:150px;font-size:11px'>评测中台/datasets</div></td><td class='num'><b>4010</b> <span class='sub-num'>文件</span></td><td class='mono' title='' style='font-size:11px'>-</td><td class='nowrap'><span class="badge ok">正常</span> </td><td class='mono' style='font-size:11px'>11-12 01:58</td></tr><tr data-detail='{&quot;完整路径&quot;: &quot;C:\\Users\\ASYS\\Desktop\\VibeMemory-中台\\测试中台\\runs&quot;, &quot;SHA-256&quot;: &quot;-&quot;, &quot;项目&quot;: &quot;VibeMemory 图记忆 SDK&quot;, &quot;类型&quot;: &quot;json_dir&quot;, &quot;规模&quot;: &quot;5 个文件&quot;, &quot;采集时间&quot;: &quot;2026-11-12T01:58:44+08:00&quot;}'><td class='mono'>test_runs</td><td class='nowrap'><span class='badge dim' title='VibeMemory 图记忆 SDK'>vibememory</span></td><td><span class='badge info'>json_dir</span></td><td class='mono' title='C:\Users\ASYS\Desktop\VibeMemory-中台\测试中台\runs'><div class='ellipsis' style='max-width:150px;font-size:11px'>测试中台/runs</div></td><td class='num'><b>5</b> <span class='sub-num'>文件</span></td><td class='mono' title='' style='font-size:11px'>-</td><td class='nowrap'><span class="badge ok">正常</span> </td><td class='mono' style='font-size:11px'>11-12 01:58</td></tr><tr data-detail='{&quot;完整路径&quot;: &quot;C:\\Users\\ASYS\\Desktop\\VibeMemory-中台\\监控中台\\runs&quot;, &quot;SHA-256&quot;: &quot;-&quot;, &quot;项目&quot;: &quot;VibeMemory 图记忆 SDK&quot;, &quot;类型&quot;: &quot;json_dir&quot;, &quot;规模&quot;: &quot;6 个文件&quot;, &quot;采集时间&quot;: &quot;2026-11-12T01:58:44+08:00&quot;}'><td class='mono'>obs_runs</td><td class='nowrap'><span class='badge dim' title='VibeMemory 图记忆 SDK'>vibememory</span></td><td><span class='badge info'>json_dir</span></td><td class='mono' title='C:\Users\ASYS\Desktop\VibeMemory-中台\监控中台\runs'><div class='ellipsis' style='max-width:150px;font-size:11px'>监控中台/runs</div></td><td class='num'><b>6</b> <span class='sub-num'>文件</span></td><td class='mono' title='' style='font-size:11px'>-</td><td class='nowrap'><span class="badge ok">正常</span> </td><td class='mono' style='font-size:11px'>11-12 01:58</td></tr></tbody></table></div>
+    </div>
+    <div>
+      <div class="panel">
+        <h2>数据质量六性 <span id="p-quality" class="tag">数据质量六性：完整性/唯一性/一致性/准确性/及时性/有效性（对齐业界数据质量维度）</span></h2>
+        <table class="tbl"><tbody><tr><td>完整性</td><td style='width:60%'><div class='progress'><i style='width:98%'></i></div></td><td class='num'>0.978</td></tr><tr><td>唯一性</td><td style='width:60%'><div class='progress'><i style='width:100%'></i></div></td><td class='num'>1.000</td></tr><tr><td>一致性</td><td style='width:60%'><div class='progress'><i style='width:100%'></i></div></td><td class='num'>1.000</td></tr><tr><td>准确性</td><td style='width:60%'><div class='progress'><i style='width:100%'></i></div></td><td class='num'>1.000</td></tr><tr><td>及时性</td><td style='width:60%'><div class='progress'><i style='width:100%'></i></div></td><td class='num'>1.000</td></tr><tr><td>有效性</td><td style='width:60%'><div class='progress'><i style='width:100%'></i></div></td><td class='num'>1.000</td></tr></tbody></table>
+      </div>
+      <div class="panel">
+        <h2>仓库健康 <span class="tag">DWS 主题</span></h2>
+        <table class="tbl"><tbody>
+          <tr><td>版本</td><td class="mono">0.3.0 <span class="badge info">Python &gt;=3.10</span></td></tr>
+          <tr><td>回归测试</td><td class="num">112 个文件 / 853 个用例</td></tr>
+          <tr><td>行覆盖率</td><td><div class="progress"><i style="width:88%"></i></div><span class="num" style="font-size:11px">87.9%</span></td></tr>
+          <tr><td>分支覆盖率</td><td><div class="progress"><i style="width:80%"></i></div><span class="num" style="font-size:11px">80.1%</span></td></tr>
+          <tr><td>提交活动</td><td class="num">近 60 次 · 最新 2026-10-31 18:30</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>数据集卡（来源身份证） <span class="tag">M0 · 对齐 Datasheets for Datasets 精简版 · 23 张</span></h2>
+    <div class="desc">每类来源回答三问：<b>哪来的</b>（origin）、<b>哪个版本</b>（版本锚点）、<b>能不能用</b>（许可证+约束）。SHA-256 指纹与变更检测见 collect.py（provenance.json）。</div>
+    <div class="tbl-wrap"><table class="tbl" data-enhance><thead><tr><th>来源</th><th>产地与生成机制</th><th>版本锚点</th><th>许可证</th><th>约束</th><th>消费方</th></tr></thead>
+    <tbody><tr data-detail='{&quot;名称&quot;: &quot;实验结果存档&quot;, &quot;产地/生成机制&quot;: &quot;开发会话（人+AI 协作）运行仓库 experiments/ 与各执行器产生，写入 results/*.json&quot;, &quot;版本锚点&quot;: &quot;GitHub commit（当前 fae3d5d）+ 每文件 SHA-256（provenance.json）&quot;, &quot;许可证&quot;: &quot;MIT&quot;, &quot;约束&quot;: &quot;无&quot;, &quot;消费方&quot;: &quot;ODS results_experiments、DWD experiments、DWS 核心实验指标、大屏·数据中台页&quot;}'><td><span class='badge info'>仓库产物</span> <span class='mono'>results_experiments</span><div class='desc'>实验结果存档</div></td><td>开发会话（人+AI 协作）运行仓库 experiments/ 与各执行器产生，写入 results/*.json</td><td class='mono' style='font-size:11px'>GitHub commit（当前 fae3d5d）+ 每文件 SHA-256（provenance.json）</td><td><span class='badge ok'>MIT</span></td><td class='nowrap'><span class='badge dim'>无</span></td><td class='num'>4 处</td></tr><tr data-detail='{&quot;名称&quot;: &quot;测试覆盖率报告&quot;, &quot;产地/生成机制&quot;: &quot;测试中台 run_tests.py --scope full 运行 pytest-cov 生成，写入仓库根 coverage.xml（cobertura 格式）&quot;, &quot;版本锚点&quot;: &quot;GitHub commit + 文件 SHA-256&quot;, &quot;许可证&quot;: &quot;MIT&quot;, &quot;约束&quot;: &quot;无&quot;, &quot;消费方&quot;: &quot;ODS coverage_xml、DWS repo_health（coverage_line_rate）、大屏·数据中台/测试页&quot;}'><td><span class='badge info'>仓库产物</span> <span class='mono'>coverage_xml</span><div class='desc'>测试覆盖率报告</div></td><td>测试中台 run_tests.py --scope full 运行 pytest-cov 生成，写入仓库根 coverage.xml（cobertura 格式）</td><td class='mono' style='font-size:11px'>GitHub commit + 文件 SHA-256</td><td><span class='badge ok'>MIT</span></td><td class='nowrap'><span class='badge dim'>无</span></td><td class='num'>3 处</td></tr><tr data-detail='{&quot;名称&quot;: &quot;项目状态台账&quot;, &quot;产地/生成机制&quot;: &quot;开发会话手工维护（能力边界、待验证事项、按日期条目）&quot;, &quot;版本锚点&quot;: &quot;GitHub commit + SHA-256&quot;, &quot;许可证&quot;: &quot;MIT&quot;, &quot;约束&quot;: &quot;无&quot;, &quot;消费方&quot;: &quot;ODS status_md、大屏·数据中台页&quot;}'><td><span class='badge info'>仓库产物</span> <span class='mono'>status_md</span><div class='desc'>项目状态台账</div></td><td>开发会话手工维护（能力边界、待验证事项、按日期条目）</td><td class='mono' style='font-size:11px'>GitHub commit + SHA-256</td><td><span class='badge ok'>MIT</span></td><td class='nowrap'><span class='badge dim'>无</span></td><td class='num'>2 处</td></tr><tr data-detail='{&quot;名称&quot;: &quot;版本演进记录&quot;, &quot;产地/生成机制&quot;: &quot;开发会话按版本手工维护&quot;, &quot;版本锚点&quot;: &quot;GitHub commit + SHA-256&quot;, &quot;许可证&quot;: &quot;MIT&quot;, &quot;约束&quot;: &quot;无&quot;, &quot;消费方&quot;: &quot;ODS changelog_md、大屏·数据中台页&quot;}'><td><span class='badge info'>仓库产物</span> <span class='mono'>changelog_md</span><div class='desc'>版本演进记录</div></td><td>开发会话按版本手工维护</td><td class='mono' style='font-size:11px'>GitHub commit + SHA-256</td><td><span class='badge ok'>MIT</span></td><td class='nowrap'><span class='badge dim'>无</span></td><td class='num'>2 处</td></tr><tr data-detail='{&quot;名称&quot;: &quot;出厂种子记忆&quot;, &quot;产地/生成机制&quot;: &quot;包作者编写的结构样本（vibe_memory/seed_memory.json）&quot;, &quot;版本锚点&quot;: &quot;GitHub commit + SHA-256&quot;, &quot;许可证&quot;: &quot;MIT&quot;, &quot;约束&quot;: &quot;无&quot;, &quot;消费方&quot;: &quot;ODS seed_memory、大屏·数据中台页&quot;}'><td><span class='badge info'>仓库产物</span> <span class='mono'>seed_memory</span><div class='desc'>出厂种子记忆</div></td><td>包作者编写的结构样本（vibe_memory/seed_memory.json）</td><td class='mono' style='font-size:11px'>GitHub commit + SHA-256</td><td><span class='badge ok'>MIT</span></td><td class='nowrap'><span class='badge dim'>无</span></td><td class='num'>2 处</td></tr><tr data-detail='{&quot;名称&quot;: &quot;回归测试清单&quot;, &quot;产地/生成机制&quot;: &quot;开发过程 TDD 产出（tests/test_*.py，TDD 会话逐个编写）&quot;, &quot;版本锚点&quot;: &quot;GitHub commit + 文件数指纹&quot;, &quot;许可证&quot;: &quot;MIT&quot;, &quot;约束&quot;: &quot;无&quot;, &quot;消费方&quot;: &quot;ODS tests_index、DWS repo_health、大屏·数据中台页&quot;}'><td><span class='badge info'>仓库产物</span> <span class='mono'>tests_index</span><div class='desc'>回归测试清单</div></td><td>开发过程 TDD 产出（tests/test_*.py，TDD 会话逐个编写）</td><td class='mono' style='font-size:11px'>GitHub commit + 文件数指纹</td><td><span class='badge ok'>MIT</span></td><td class='nowrap'><span class='badge dim'>无</span></td><td class='num'>3 处</td></tr><tr data-detail='{&quot;名称&quot;: &quot;提交活动&quot;, &quot;产地/生成机制&quot;: &quot;git log 自动导出（近 60 次提交）&quot;, &quot;版本锚点&quot;: &quot;HEAD commit SHA&quot;, &quot;许可证&quot;: &quot;MIT&quot;, &quot;约束&quot;: &quot;无&quot;, &quot;消费方&quot;: &quot;ODS git_activity、DWS repo_health（提交活动）、大屏·数据中台页&quot;}'><td><span class='badge info'>仓库产物</span> <span class='mono'>git_activity</span><div class='desc'>提交活动</div></td><td>git log 自动导出（近 60 次提交）</td><td class='mono' style='font-size:11px'>HEAD commit SHA</td><td><span class='badge ok'>MIT</span></td><td class='nowrap'><span class='badge dim'>无</span></td><td class='num'>3 处</td></tr><tr data-detail='{&quot;名称&quot;: &quot;项目元数据&quot;, &quot;产地/生成机制&quot;: &quot;pyproject.toml（包作者维护）&quot;, &quot;版本锚点&quot;: &quot;GitHub commit + SHA-256&quot;, &quot;许可证&quot;: &quot;MIT&quot;, &quot;约束&quot;: &quot;无&quot;, &quot;消费方&quot;: &quot;ODS repo_meta、DWS repo_health（版本）、大屏·数据中台页&quot;}'><td><span class='badge info'>仓库产物</span> <span class='mono'>repo_meta</span><div class='desc'>项目元数据</div></td><td>pyproject.toml（包作者维护）</td><td class='mono' style='font-size:11px'>GitHub commit + SHA-256</td><td><span class='badge ok'>MIT</span></td><td class='nowrap'><span class='badge dim'>无</span></td><td class='num'>3 处</td></tr><tr data-detail='{&quot;名称&quot;: &quot;评测运行存档&quot;, &quot;产地/生成机制&quot;: &quot;评测中台 run_eval.py 执行产出（run-*.json），评测即数据资产回流&quot;, &quot;版本锚点&quot;: &quot;存档 run_id + created_at + 评测集 SHA-256 + 环境（seed/协议/规模）&quot;, &quot;许可证&quot;: &quot;MIT&quot;, &quot;约束&quot;: &quot;derived-content：含公开基准派生查询文本的存档（locomo_/longmemeval_*），受上游许可约束——LoCoMo 部分按 CC BY-NC 4.0 对待&quot;, &quot;消费方&quot;: &quot;ODS eval_runs、DWD eval_runs、DWS 评测结果主题、大屏·评测中台/门户页&quot;}'><td><span class='badge info'>中台回流</span> <span class='mono'>eval_runs</span><div class='desc'>评测运行存档</div></td><td>评测中台 run_eval.py 执行产出（run-*.json），评测即数据资产回流</td><td class='mono' style='font-size:11px'>存档 run_id + created_at + 评测集 SHA-256 + 环境（seed/协议/规模）</td><td><span class='badge ok'>MIT</span></td><td class='nowrap'><span class='badge dim' title='derived-content：含公开基准派生查询文本的存档（locomo_/longmemeval_*），受上游许可约束——LoCoMo 部分按 CC BY-NC 4.0 对待'>derived-content：含公开基准派生查询文本的存档（locomo_/longmemeval_*），受上游许可约束——LoCoMo 部分按 CC BY-NC 4.0 对待</span></td><td class='num'>4 处</td></tr><tr data-detail='{&quot;名称&quot;: &quot;内建+生成评测集&quot;, &quot;产地/生成机制&quot;: &quot;内建 7 套人工设计 + generate_evalsets.py 固定种子生成 7 套（组合生成、锚点全池唯一约束）&quot;, &quot;版本锚点&quot;: &quot;gen_manifest.json（种子/参数/逐文件 SHA-256）&quot;, &quot;许可证&quot;: &quot;MIT&quot;, &quot;约束&quot;: &quot;无&quot;, &quot;消费方&quot;: &quot;评测中台 run_eval、ODS evalsets_local、DWD evalsets、大屏·评测中台页&quot;}'><td><span class='badge info'>中台回流</span> <span class='mono'>evalsets_local</span><div class='desc'>内建+生成评测集</div></td><td>内建 7 套人工设计 + generate_evalsets.py 固定种子生成 7 套（组合生成、锚点全池唯一约束）</td><td class='mono' style='font-size:11px'>gen_manifest.json（种子/参数/逐文件 SHA-256）</td><td><span class='badge ok'>MIT</span></td><td class='nowrap'><span class='badge dim'>无</span></td><td class='num'>4 处</td></tr><tr data-detail='{&quot;名称&quot;: &quot;生成评测集清单&quot;, &quot;产地/生成机制&quot;: &quot;generate_evalsets.py 写出（gen_manifest.json）&quot;, &quot;版本锚点&quot;: &quot;文件 SHA-256&quot;, &quot;许可证&quot;: &quot;MIT&quot;, &quot;约束&quot;: &quot;无&quot;, &quot;消费方&quot;: &quot;ODS evalset_manifest、评测可复现性校验&quot;}'><td><span class='badge info'>中台回流</span> <span class='mono'>evalset_manifest</span><div class='desc'>生成评测集清单</div></td><td>generate_evalsets.py 写出（gen_manifest.json）</td><td class='mono' style='font-size:11px'>文件 SHA-256</td><td><span class='badge ok'>MIT</span></td><td class='nowrap'><span class='badge dim'>无</span></td><td class='num'>2 处</td></tr><tr data-detail='{&quot;名称&quot;: &quot;公开基准转换评测集&quot;, &quot;产地/生成机制&quot;: &quot;convert_benchmarks.py 将公开基准转为中台协议（id/type/query/expected_memory_ids/trap_keywords）&quot;, &quot;版本锚点&quot;: &quot;转换脚本 commit + 上游原始文件 SHA-256 + 输出 SHA-256&quot;, &quot;许可证&quot;: &quot;混合：locomo_* 为 CC BY-NC 4.0（派生）；longmemeval_* 为 MIT（上游仓库 LICENSE，清单已核实）&quot;, &quot;约束&quot;: &quot;non-commercial：LoCoMo 派生文件、share-alike：无、derived-content：全部&quot;, &quot;消费方&quot;: &quot;评测中台 run_eval --evalset benchmarks/*、ODS benchmarks_local、大屏·评测中台页&quot;}'><td><span class='badge info'>中台回流</span> <span class='mono'>benchmarks_local</span><div class='desc'>公开基准转换评测集</div></td><td>convert_benchmarks.py 将公开基准转为中台协议（id/type/query/expected_memory_ids/trap_keywords）</td><td class='mono' style='font-size:11px'>转换脚本 commit + 上游原始文件 SHA-256 + 输出 SHA-256</td><td><span class='badge warn'>混合</span></td><td class='nowrap'><span class='badge dim' title='non-commercial：LoCoMo 派生文件'>non-commercial：LoCoMo 派生文件</span> <span class='badge dim' title='share-alike：无'>share-alike：无</span> <span class='badge dim' title='derived-content：全部'>derived-content：全部</span></td><td class='num'>3 处</td></tr><tr data-detail='{&quot;名称&quot;: &quot;公开基准原始数据集&quot;, &quot;产地/生成机制&quot;: &quot;第三方公开发布（LoCoMo: snap-research GitHub；LongMemEval: 官方发布；PersonaMem: bowen-upenn HF）&quot;, &quot;版本锚点&quot;: &quot;文件 SHA-256 指纹卡 + 上游 revision（未逐项记录，M3 补 upstream_revision）&quot;, &quot;许可证&quot;: &quot;混合：LoCoMo CC BY-NC 4.0（已核实）；LongMemEval MIT（已核实）；PersonaMem 未核实（以 bowen-upenn/PersonaMem 仓库 LICENSE 为准）&quot;, &quot;约束&quot;: &quot;non-commercial：LoCoMo 部分、unverified-license：PersonaMem 部分&quot;, &quot;消费方&quot;: &quot;convert_benchmarks.py 输入、ODS datasets_public、DWD datasets、大屏·评测中台页&quot;}'><td><span class='badge info'>外部引入</span> <span class='mono'>datasets_public</span><div class='desc'>公开基准原始数据集</div></td><td>第三方公开发布（LoCoMo: snap-research GitHub；LongMemEval: 官方发布；PersonaMem: bowen-upenn HF）</td><td class='mono' style='font-size:11px'>文件 SHA-256 指纹卡 + 上游 revision（未逐项记录，M3 补 upstream_revision）</td><td><span class='badge bad'>未核实</span></td><td class='nowrap'><span class='badge dim' title='non-commercial：LoCoMo 部分'>non-commercial：LoCoMo 部分</span> <span class='badge dim' title='unverified-license：PersonaMem 部分'>unverified-license：PersonaMem 部分</span></td><td class='num'>4 处</td></tr><tr data-detail='{&quot;名称&quot;: &quot;回归测试存档&quot;, &quot;产地/生成机制&quot;: &quot;测试中台 run_tests.py 执行产出（test-*.json + junit/cov 证据文件）&quot;, &quot;版本锚点&quot;: &quot;run_id + created_at + junit/cov 证据文件 SHA-256&quot;, &quot;许可证&quot;: &quot;MIT&quot;, &quot;约束&quot;: &quot;无&quot;, &quot;消费方&quot;: &quot;ODS test_runs、DWD test_runs、DWS repo_health、大屏·测试中台页&quot;}'><td><span class='badge info'>中台回流</span> <span class='mono'>test_runs</span><div class='desc'>回归测试存档</div></td><td>测试中台 run_tests.py 执行产出（test-*.json + junit/cov 证据文件）</td><td class='mono' style='font-size:11px'>run_id + created_at + junit/cov 证据文件 SHA-256</td><td><span class='badge ok'>MIT</span></td><td class='nowrap'><span class='badge dim'>无</span></td><td class='num'>4 处</td></tr><tr data-detail='{&quot;名称&quot;: &quot;运行时指标存档&quot;, &quot;产地/生成机制&quot;: &quot;监控中台 collect_runtime_metrics.py 确定性负载采集（obs-*.json）&quot;, &quot;版本锚点&quot;: &quot;run_id + created_at + workload.seed（可复现）&quot;, &quot;许可证&quot;: &quot;MIT&quot;, &quot;约束&quot;: &quot;无&quot;, &quot;消费方&quot;: &quot;ODS obs_runs、DWD obs_runs、大屏·监控中台页&quot;}'><td><span class='badge info'>中台回流</span> <span class='mono'>obs_runs</span><div class='desc'>运行时指标存档</div></td><td>监控中台 collect_runtime_metrics.py 确定性负载采集（obs-*.json）</td><td class='mono' style='font-size:11px'>run_id + created_at + workload.seed（可复现）</td><td><span class='badge ok'>MIT</span></td><td class='nowrap'><span class='badge dim'>无</span></td><td class='num'>3 处</td></tr><tr data-detail='{&quot;名称&quot;: &quot;知识库·实验知识文档&quot;, &quot;产地/生成机制&quot;: &quot;项目 knowledge-base（第二接入项目）：开发会话沉淀的实验流程复核/验收/诊断复盘 markdown 文档&quot;, &quot;版本锚点&quot;: &quot;逐文件 SHA-256 + 文档内日期范围（date_min/date_max）&quot;, &quot;许可证&quot;: &quot;个人知识文档，未设开源许可证，仅内部使用&quot;, &quot;约束&quot;: &quot;internal-use&quot;, &quot;消费方&quot;: &quot;ODS kb_docs、大屏·数据中台页（来源清单/数据集卡）&quot;}'><td><span class='badge info'>项目接入</span> <span class='mono'>kb_docs</span><div class='desc'>知识库·实验知识文档</div></td><td>项目 knowledge-base（第二接入项目）：开发会话沉淀的实验流程复核/验收/诊断复盘 markdown 文档</td><td class='mono' style='font-size:11px'>逐文件 SHA-256 + 文档内日期范围（date_min/date_max）</td><td><span class='badge warn'>混合</span></td><td class='nowrap'><span class='badge dim' title='internal-use'>internal-use</span></td><td class='num'>2 处</td></tr><tr data-detail='{&quot;名称&quot;: &quot;知识库·文件台账&quot;, &quot;产地/生成机制&quot;: &quot;项目 knowledge-base 顶层 225 个文件的指纹清单&quot;, &quot;版本锚点&quot;: &quot;逐文件 SHA-256&quot;, &quot;许可证&quot;: &quot;同知识库项目&quot;, &quot;约束&quot;: &quot;internal-use&quot;, &quot;消费方&quot;: &quot;ODS kb_files&quot;}'><td><span class='badge info'>项目接入</span> <span class='mono'>kb_files</span><div class='desc'>知识库·文件台账</div></td><td>项目 knowledge-base 顶层 225 个文件的指纹清单</td><td class='mono' style='font-size:11px'>逐文件 SHA-256</td><td><span class='badge warn'>混合</span></td><td class='nowrap'><span class='badge dim' title='internal-use'>internal-use</span></td><td class='num'>1 处</td></tr><tr data-detail='{&quot;名称&quot;: &quot;多智能体协作事件流&quot;, &quot;产地/生成机制&quot;: &quot;项目 codex-zcode-team（第三接入项目）：events.jsonl 事件流&quot;, &quot;版本锚点&quot;: &quot;文件 SHA-256 + mtime&quot;, &quot;许可证&quot;: &quot;个人工作区数据，未设开源许可证&quot;, &quot;约束&quot;: &quot;internal-use&quot;, &quot;消费方&quot;: &quot;ODS cz_events、大屏·数据中台页&quot;}'><td><span class='badge info'>项目接入</span> <span class='mono'>cz_events</span><div class='desc'>多智能体协作事件流</div></td><td>项目 codex-zcode-team（第三接入项目）：events.jsonl 事件流</td><td class='mono' style='font-size:11px'>文件 SHA-256 + mtime</td><td><span class='badge warn'>混合</span></td><td class='nowrap'><span class='badge dim' title='internal-use'>internal-use</span></td><td class='num'>2 处</td></tr><tr data-detail='{&quot;名称&quot;: &quot;工作区健康快照&quot;, &quot;产地/生成机制&quot;: &quot;项目 codex-zcode-team：doctor.json 健康诊断&quot;, &quot;版本锚点&quot;: &quot;文件 SHA-256&quot;, &quot;许可证&quot;: &quot;个人工作区数据，未设开源许可证&quot;, &quot;约束&quot;: &quot;internal-use&quot;, &quot;消费方&quot;: &quot;ODS cz_doctor&quot;}'><td><span class='badge info'>项目接入</span> <span class='mono'>cz_doctor</span><div class='desc'>工作区健康快照</div></td><td>项目 codex-zcode-team：doctor.json 健康诊断</td><td class='mono' style='font-size:11px'>文件 SHA-256</td><td><span class='badge warn'>混合</span></td><td class='nowrap'><span class='badge dim' title='internal-use'>internal-use</span></td><td class='num'>1 处</td></tr><tr data-detail='{&quot;名称&quot;: &quot;协作规范文档&quot;, &quot;产地/生成机制&quot;: &quot;项目 codex-zcode-team：AGENTS.md/README 等协作规范与指南&quot;, &quot;版本锚点&quot;: &quot;逐文件 SHA-256&quot;, &quot;许可证&quot;: &quot;个人工作区数据，未设开源许可证&quot;, &quot;约束&quot;: &quot;internal-use&quot;, &quot;消费方&quot;: &quot;ODS cz_docs&quot;}'><td><span class='badge info'>项目接入</span> <span class='mono'>cz_docs</span><div class='desc'>协作规范文档</div></td><td>项目 codex-zcode-team：AGENTS.md/README 等协作规范与指南</td><td class='mono' style='font-size:11px'>逐文件 SHA-256</td><td><span class='badge warn'>混合</span></td><td class='nowrap'><span class='badge dim' title='internal-use'>internal-use</span></td><td class='num'>1 处</td></tr><tr data-detail='{&quot;名称&quot;: &quot;LoCoMo 对抗题评测集（答案级）&quot;, &quot;产地/生成机制&quot;: &quot;convert_benchmarks.py adversarial：LoCoMo category=5 对抗题全量（此前被召回评测跳过）&quot;, &quot;版本锚点&quot;: &quot;文件 SHA-256 + 上游 locomo10.json SHA-256&quot;, &quot;许可证&quot;: &quot;LoCoMo 上游 CC BY-NC 4.0（派生）&quot;, &quot;约束&quot;: &quot;non-commercial、derived-content&quot;, &quot;消费方&quot;: &quot;run_answer_eval.py、ODS benchmarks_local、大屏·评测中台页&quot;}'><td><span class='badge info'>评测集资产</span> <span class='mono'>locomo_adversarial_bench</span><div class='desc'>LoCoMo 对抗题评测集（答案级）</div></td><td>convert_benchmarks.py adversarial：LoCoMo category=5 对抗题全量（此前被召回评测跳过）</td><td class='mono' style='font-size:11px'>文件 SHA-256 + 上游 locomo10.json SHA-256</td><td><span class='badge warn'>混合</span></td><td class='nowrap'><span class='badge warn' title='non-commercial'>NC 禁商用</span> <span class='badge info' title='derived-content'>派生内容</span></td><td class='num'>3 处</td></tr><tr data-detail='{&quot;名称&quot;: &quot;LongMemEval 拒答题评测集（答案级）&quot;, &quot;产地/生成机制&quot;: &quot;convert_benchmarks.py abs：LongMemEval-S _abs 弃答题全量（此前未纳入）&quot;, &quot;版本锚点&quot;: &quot;文件 SHA-256 + 上游 cleaned.json SHA-256&quot;, &quot;许可证&quot;: &quot;MIT&quot;, &quot;约束&quot;: &quot;derived-content&quot;, &quot;消费方&quot;: &quot;run_answer_eval.py、ODS benchmarks_local、大屏·评测中台页&quot;}'><td><span class='badge info'>评测集资产</span> <span class='mono'>longmemeval_abs_bench</span><div class='desc'>LongMemEval 拒答题评测集（答案级）</div></td><td>convert_benchmarks.py abs：LongMemEval-S _abs 弃答题全量（此前未纳入）</td><td class='mono' style='font-size:11px'>文件 SHA-256 + 上游 cleaned.json SHA-256</td><td><span class='badge ok'>MIT</span></td><td class='nowrap'><span class='badge info' title='derived-content'>派生内容</span></td><td class='num'>3 处</td></tr><tr data-detail='{&quot;名称&quot;: &quot;PersonaMem 偏好问答评测集（答案级·样例规模）&quot;, &quot;产地/生成机制&quot;: &quot;convert_benchmarks.py personamem：本地缓存 3 个 persona（988/730/782）的 val.csv 题&quot;, &quot;版本锚点&quot;: &quot;文件 SHA-256 + val.csv/history SHA-256（卡内已登记）&quot;, &quot;许可证&quot;: &quot;CC-BY-4.0&quot;, &quot;约束&quot;: &quot;derived-content、attribution&quot;, &quot;消费方&quot;: &quot;run_answer_eval.py、ODS benchmarks_local、大屏·评测中台页&quot;}'><td><span class='badge info'>评测集资产</span> <span class='mono'>personamem_val_bench</span><div class='desc'>PersonaMem 偏好问答评测集（答案级·样例规模）</div></td><td>convert_benchmarks.py personamem：本地缓存 3 个 persona（988/730/782）的 val.csv 题</td><td class='mono' style='font-size:11px'>文件 SHA-256 + val.csv/history SHA-256（卡内已登记）</td><td><span class='badge ok'>CC-BY-4.0</span></td><td class='nowrap'><span class='badge info' title='derived-content'>派生内容</span> <span class='badge dim' title='attribution'>attribution</span></td><td class='num'>3 处</td></tr></tbody></table></div>
+    <div class="desc" style="margin-top:8px">完整卡内容（schema、已知局限、消费方明细）见 <code>数据中台/dataset_cards.json</code>。</div>
+  </div>
+
+  <div class="panel">
+    <h2>数据资产目录 <span id="p-assets" class="tag">含血缘 lineage 与质量分 · catalog.json</span></h2>
+    <div class="tbl-wrap"><table class="tbl" data-enhance><thead><tr><th>资产</th><th>说明</th><th>行数</th><th>路径</th><th>质量</th><th>上游血缘</th></tr></thead>
+    <tbody><tr data-detail='{&quot;层级&quot;: &quot;ods&quot;, &quot;资产 ID&quot;: &quot;ods_*&quot;, &quot;说明&quot;: &quot;9 类可信来源的原始快照（指纹+记录数）&quot;, &quot;路径&quot;: &quot;数据中台/assets/ods/&quot;, &quot;行数&quot;: &quot;21&quot;, &quot;上游血缘&quot;: &quot;cz_events ← cz_doctor ← cz_docs ← kb_docs ← kb_files ← results_experiments ← coverage_xml ← status_md ← changelog_md ← seed_memory ← tests_index ← git_activity ← repo_meta ← eval_runs ← ans_runs ← evalsets_local ← evalset_manifest ← benchmarks_local ← datasets_public ← test_runs ← obs_runs&quot;, &quot;质量分&quot;: &quot;-&quot;}'><td><span class='badge dim'>ods</span> <span class='mono'>ods_*</span></td><td>9 类可信来源的原始快照（指纹+记录数）</td><td class='num'>21</td><td class='mono' style='font-size:11px'>数据中台/assets/ods/</td><td></td><td class='mono' style='font-size:11px'>cz_events ← cz_doctor ← cz_docs ← kb_docs ← kb_files ← results_experiments ← coverage_xml ← status_md ← changelog_md ← seed_memory ← tests_index ← git_activity ← repo_meta ← eval_runs ← ans_runs ← evalsets_local ← evalset_manifest ← benchmarks_local ← datasets_public ← test_runs ← obs_runs</td></tr><tr data-detail='{&quot;层级&quot;: &quot;dwd&quot;, &quot;资产 ID&quot;: &quot;dwd_experiments&quot;, &quot;说明&quot;: &quot;实验结果明细&quot;, &quot;路径&quot;: &quot;数据中台/assets/dwd/experiments.json&quot;, &quot;行数&quot;: &quot;168&quot;, &quot;上游血缘&quot;: &quot;results_experiments&quot;, &quot;质量分&quot;: &quot;0.956&quot;}'><td><span class='badge dim'>dwd</span> <span class='mono'>dwd_experiments</span></td><td>实验结果明细</td><td class='num'>168</td><td class='mono' style='font-size:11px'>数据中台/assets/dwd/experiments.json</td><td><span class='badge ok'>0.956</span></td><td class='mono' style='font-size:11px'>results_experiments</td></tr><tr data-detail='{&quot;层级&quot;: &quot;dwd&quot;, &quot;资产 ID&quot;: &quot;dwd_coverage&quot;, &quot;说明&quot;: &quot;覆盖率明细&quot;, &quot;路径&quot;: &quot;数据中台/assets/dwd/coverage.json&quot;, &quot;行数&quot;: &quot;11&quot;, &quot;上游血缘&quot;: &quot;coverage_xml&quot;, &quot;质量分&quot;: &quot;1.000&quot;}'><td><span class='badge dim'>dwd</span> <span class='mono'>dwd_coverage</span></td><td>覆盖率明细</td><td class='num'>11</td><td class='mono' style='font-size:11px'>数据中台/assets/dwd/coverage.json</td><td><span class='badge ok'>1.000</span></td><td class='mono' style='font-size:11px'>coverage_xml</td></tr><tr data-detail='{&quot;层级&quot;: &quot;dwd&quot;, &quot;资产 ID&quot;: &quot;dwd_docs&quot;, &quot;说明&quot;: &quot;状态台账与版本演进明细&quot;, &quot;路径&quot;: &quot;数据中台/assets/dwd/docs.json&quot;, &quot;行数&quot;: &quot;68&quot;, &quot;上游血缘&quot;: &quot;status_md ← changelog_md&quot;, &quot;质量分&quot;: &quot;-&quot;}'><td><span class='badge dim'>dwd</span> <span class='mono'>dwd_docs</span></td><td>状态台账与版本演进明细</td><td class='num'>68</td><td class='mono' style='font-size:11px'>数据中台/assets/dwd/docs.json</td><td></td><td class='mono' style='font-size:11px'>status_md ← changelog_md</td></tr><tr data-detail='{&quot;层级&quot;: &quot;dwd&quot;, &quot;资产 ID&quot;: &quot;dwd_repo&quot;, &quot;说明&quot;: &quot;仓库元数据/测试索引/提交活动&quot;, &quot;路径&quot;: &quot;数据中台/assets/dwd/repo.json&quot;, &quot;行数&quot;: &quot;1&quot;, &quot;上游血缘&quot;: &quot;repo_meta ← tests_index ← git_activity ← seed_memory&quot;, &quot;质量分&quot;: &quot;-&quot;}'><td><span class='badge dim'>dwd</span> <span class='mono'>dwd_repo</span></td><td>仓库元数据/测试索引/提交活动</td><td class='num'>1</td><td class='mono' style='font-size:11px'>数据中台/assets/dwd/repo.json</td><td></td><td class='mono' style='font-size:11px'>repo_meta ← tests_index ← git_activity ← seed_memory</td></tr><tr data-detail='{&quot;层级&quot;: &quot;dwd&quot;, &quot;资产 ID&quot;: &quot;dwd_eval_runs&quot;, &quot;说明&quot;: &quot;评测运行存档明细（评测中台回流）&quot;, &quot;路径&quot;: &quot;数据中台/assets/dwd/eval_runs.json&quot;, &quot;行数&quot;: &quot;91&quot;, &quot;上游血缘&quot;: &quot;eval_runs&quot;, &quot;质量分&quot;: &quot;1.000&quot;}'><td><span class='badge dim'>dwd</span> <span class='mono'>dwd_eval_runs</span></td><td>评测运行存档明细（评测中台回流）</td><td class='num'>91</td><td class='mono' style='font-size:11px'>数据中台/assets/dwd/eval_runs.json</td><td><span class='badge ok'>1.000</span></td><td class='mono' style='font-size:11px'>eval_runs</td></tr><tr data-detail='{&quot;层级&quot;: &quot;dwd&quot;, &quot;资产 ID&quot;: &quot;dwd_eval_items&quot;, &quot;说明&quot;: &quot;评测逐题明细（运行存档 items 炸开，万级记录主体）&quot;, &quot;路径&quot;: &quot;数据中台/assets/dwd/eval_items.json&quot;, &quot;行数&quot;: &quot;8,742&quot;, &quot;上游血缘&quot;: &quot;eval_runs&quot;, &quot;质量分&quot;: &quot;1.000&quot;}'><td><span class='badge dim'>dwd</span> <span class='mono'>dwd_eval_items</span></td><td>评测逐题明细（运行存档 items 炸开，万级记录主体）</td><td class='num'>8,742</td><td class='mono' style='font-size:11px'>数据中台/assets/dwd/eval_items.json</td><td><span class='badge ok'>1.000</span></td><td class='mono' style='font-size:11px'>eval_runs</td></tr><tr data-detail='{&quot;层级&quot;: &quot;dwd&quot;, &quot;资产 ID&quot;: &quot;dwd_evalsets&quot;, &quot;说明&quot;: &quot;评测集资产明细（内建+生成+公开基准转换）&quot;, &quot;路径&quot;: &quot;数据中台/assets/dwd/evalsets.json&quot;, &quot;行数&quot;: &quot;30&quot;, &quot;上游血缘&quot;: &quot;evalsets_local ← benchmarks_local&quot;, &quot;质量分&quot;: &quot;1.000&quot;}'><td><span class='badge dim'>dwd</span> <span class='mono'>dwd_evalsets</span></td><td>评测集资产明细（内建+生成+公开基准转换）</td><td class='num'>30</td><td class='mono' style='font-size:11px'>数据中台/assets/dwd/evalsets.json</td><td><span class='badge ok'>1.000</span></td><td class='mono' style='font-size:11px'>evalsets_local ← benchmarks_local</td></tr><tr data-detail='{&quot;层级&quot;: &quot;dwd&quot;, &quot;资产 ID&quot;: &quot;dwd_datasets&quot;, &quot;说明&quot;: &quot;公开基准原始数据集明细（含指纹卡）&quot;, &quot;路径&quot;: &quot;数据中台/assets/dwd/datasets.json&quot;, &quot;行数&quot;: &quot;4,010&quot;, &quot;上游血缘&quot;: &quot;datasets_public&quot;, &quot;质量分&quot;: &quot;1.000&quot;}'><td><span class='badge dim'>dwd</span> <span class='mono'>dwd_datasets</span></td><td>公开基准原始数据集明细（含指纹卡）</td><td class='num'>4,010</td><td class='mono' style='font-size:11px'>数据中台/assets/dwd/datasets.json</td><td><span class='badge ok'>1.000</span></td><td class='mono' style='font-size:11px'>datasets_public</td></tr><tr data-detail='{&quot;层级&quot;: &quot;dwd&quot;, &quot;资产 ID&quot;: &quot;dwd_test_runs&quot;, &quot;说明&quot;: &quot;pytest 回归运行明细（测试中台回流）&quot;, &quot;路径&quot;: &quot;数据中台/assets/dwd/test_runs.json&quot;, &quot;行数&quot;: &quot;5&quot;, &quot;上游血缘&quot;: &quot;test_runs&quot;, &quot;质量分&quot;: &quot;1.000&quot;}'><td><span class='badge dim'>dwd</span> <span class='mono'>dwd_test_runs</span></td><td>pytest 回归运行明细（测试中台回流）</td><td class='num'>5</td><td class='mono' style='font-size:11px'>数据中台/assets/dwd/test_runs.json</td><td><span class='badge ok'>1.000</span></td><td class='mono' style='font-size:11px'>test_runs</td></tr><tr data-detail='{&quot;层级&quot;: &quot;dwd&quot;, &quot;资产 ID&quot;: &quot;dwd_test_cases&quot;, &quot;说明&quot;: &quot;pytest 逐用例明细（junitxml 炸开）&quot;, &quot;路径&quot;: &quot;数据中台/assets/dwd/test_cases.json&quot;, &quot;行数&quot;: &quot;5,513&quot;, &quot;上游血缘&quot;: &quot;test_runs&quot;, &quot;质量分&quot;: &quot;-&quot;}'><td><span class='badge dim'>dwd</span> <span class='mono'>dwd_test_cases</span></td><td>pytest 逐用例明细（junitxml 炸开）</td><td class='num'>5,513</td><td class='mono' style='font-size:11px'>数据中台/assets/dwd/test_cases.json</td><td></td><td class='mono' style='font-size:11px'>test_runs</td></tr><tr data-detail='{&quot;层级&quot;: &quot;dwd&quot;, &quot;资产 ID&quot;: &quot;dwd_obs_runs&quot;, &quot;说明&quot;: &quot;运行时指标明细（监控中台回流）&quot;, &quot;路径&quot;: &quot;数据中台/assets/dwd/obs_runs.json&quot;, &quot;行数&quot;: &quot;6&quot;, &quot;上游血缘&quot;: &quot;obs_runs&quot;, &quot;质量分&quot;: &quot;1.000&quot;}'><td><span class='badge dim'>dwd</span> <span class='mono'>dwd_obs_runs</span></td><td>运行时指标明细（监控中台回流）</td><td class='num'>6</td><td class='mono' style='font-size:11px'>数据中台/assets/dwd/obs_runs.json</td><td><span class='badge ok'>1.000</span></td><td class='mono' style='font-size:11px'>obs_runs</td></tr><tr data-detail='{&quot;层级&quot;: &quot;dws&quot;, &quot;资产 ID&quot;: &quot;dws_repo_health&quot;, &quot;说明&quot;: &quot;仓库健康指标主题&quot;, &quot;路径&quot;: &quot;数据中台/assets/dws/repo_health.json&quot;, &quot;行数&quot;: &quot;1&quot;, &quot;上游血缘&quot;: &quot;dwd_repo ← dwd_coverage&quot;, &quot;质量分&quot;: &quot;1.000&quot;}'><td><span class='badge dim'>dws</span> <span class='mono'>dws_repo_health</span></td><td>仓库健康指标主题</td><td class='num'>1</td><td class='mono' style='font-size:11px'>数据中台/assets/dws/repo_health.json</td><td><span class='badge ok'>1.000</span></td><td class='mono' style='font-size:11px'>dwd_repo ← dwd_coverage</td></tr><tr data-detail='{&quot;层级&quot;: &quot;dws&quot;, &quot;资产 ID&quot;: &quot;dws_experiment_metrics&quot;, &quot;说明&quot;: &quot;核心实验指标主题&quot;, &quot;路径&quot;: &quot;数据中台/assets/dws/experiment_metrics.json&quot;, &quot;行数&quot;: &quot;11&quot;, &quot;上游血缘&quot;: &quot;dwd_experiments&quot;, &quot;质量分&quot;: &quot;1.000&quot;}'><td><span class='badge dim'>dws</span> <span class='mono'>dws_experiment_metrics</span></td><td>核心实验指标主题</td><td class='num'>11</td><td class='mono' style='font-size:11px'>数据中台/assets/dws/experiment_metrics.json</td><td><span class='badge ok'>1.000</span></td><td class='mono' style='font-size:11px'>dwd_experiments</td></tr><tr data-detail='{&quot;层级&quot;: &quot;dws&quot;, &quot;资产 ID&quot;: &quot;dws_eval_summary&quot;, &quot;说明&quot;: &quot;评测结果主题（按评测集）&quot;, &quot;路径&quot;: &quot;数据中台/assets/dws/eval_summary.json&quot;, &quot;行数&quot;: &quot;20&quot;, &quot;上游血缘&quot;: &quot;dwd_eval_runs&quot;, &quot;质量分&quot;: &quot;1.000&quot;}'><td><span class='badge dim'>dws</span> <span class='mono'>dws_eval_summary</span></td><td>评测结果主题（按评测集）</td><td class='num'>20</td><td class='mono' style='font-size:11px'>数据中台/assets/dws/eval_summary.json</td><td><span class='badge ok'>1.000</span></td><td class='mono' style='font-size:11px'>dwd_eval_runs</td></tr><tr data-detail='{&quot;层级&quot;: &quot;dws&quot;, &quot;资产 ID&quot;: &quot;dws_weekly&quot;, &quot;说明&quot;: &quot;周对比主题（本周 vs 上周：命中率/通过率，回答「这周比上周好吗」）&quot;, &quot;路径&quot;: &quot;数据中台/assets/dws/weekly.json&quot;, &quot;行数&quot;: &quot;1&quot;, &quot;上游血缘&quot;: &quot;dwd_eval_items ← dwd_test_cases ← dwd_obs_runs&quot;, &quot;质量分&quot;: &quot;1.000&quot;}'><td><span class='badge dim'>dws</span> <span class='mono'>dws_weekly</span></td><td>周对比主题（本周 vs 上周：命中率/通过率，回答「这周比上周好吗」）</td><td class='num'>1</td><td class='mono' style='font-size:11px'>数据中台/assets/dws/weekly.json</td><td><span class='badge ok'>1.000</span></td><td class='mono' style='font-size:11px'>dwd_eval_items ← dwd_test_cases ← dwd_obs_runs</td></tr></tbody></table></div>
+  </div>
+
+  <div class="panel">
+    <h2>核心实验指标主题 <span class="tag">DWS · 11 条 · 来源文件级溯源</span></h2>
+    <div class="tbl-wrap"><table class="tbl" data-enhance><thead><tr><th>指标</th><th>数值</th><th>来源实验文件</th><th>数据日期</th></tr></thead>
+    <tbody><tr><td>WAL峰值-被动基线(MB)</td><td class='num'>1,047.47<span class='badge dim' style='margin-left:6px'>MB</span></td><td class='mono' style='font-size:11px'>disk_soak.json</td><td class='mono' style='font-size:11px'>2026-09-13</td></tr><tr><td>soak时长(s)</td><td class='num'>1,800.46<span class='badge dim' style='margin-left:6px'>s</span></td><td class='mono' style='font-size:11px'>disk_soak_sdk_maintenance_30min.json</td><td class='mono' style='font-size:11px'>2026-09-14</td></tr><tr><td>WAL峰值(MB)</td><td class='num'>55.29<span class='badge dim' style='margin-left:6px'>MB</span></td><td class='mono' style='font-size:11px'>disk_soak_sdk_maintenance_30min.json</td><td class='mono' style='font-size:11px'>2026-09-14</td></tr><tr><td>LongMemEval冒烟-计分题数</td><td class='num'>3<span class='badge dim' style='margin-left:6px'></span></td><td class='mono' style='font-size:11px'>longmemeval_minilm_smoke.json</td><td class='mono' style='font-size:11px'>2026-09-26</td></tr><tr><td>LongMemEval冒烟-Top5证据命中</td><td class='num'>3<span class='badge dim' style='margin-left:6px'></span></td><td class='mono' style='font-size:11px'>longmemeval_minilm_smoke.json</td><td class='mono' style='font-size:11px'>2026-09-26</td></tr><tr><td>LongMemEval冒烟-轮级证据召回均值</td><td class='num'>0.8333<span class='badge dim' style='margin-left:6px'></span></td><td class='mono' style='font-size:11px'>longmemeval_minilm_smoke.json</td><td class='mono' style='font-size:11px'>2026-09-26</td></tr><tr><td>查询p50(ms)</td><td class='num'>18.7<span class='badge dim' style='margin-left:6px'>ms</span></td><td class='mono' style='font-size:11px'>longmemeval_minilm_smoke.json</td><td class='mono' style='font-size:11px'>2026-09-26</td></tr><tr><td>维护轮数</td><td class='num'>30<span class='badge dim' style='margin-left:6px'></span></td><td class='mono' style='font-size:11px'>mcp_maintenance_smoke.json</td><td class='mono' style='font-size:11px'>2026-09-14</td></tr><tr><td>维护状态截断数</td><td class='num'>30<span class='badge dim' style='margin-left:6px'></span></td><td class='mono' style='font-size:11px'>mcp_maintenance_smoke.json</td><td class='mono' style='font-size:11px'>2026-09-14</td></tr><tr><td>检查点回程p50(ms)</td><td class='num'>5.13<span class='badge dim' style='margin-left:6px'>ms</span></td><td class='mono' style='font-size:11px'>mcp_maintenance_smoke.json</td><td class='mono' style='font-size:11px'>2026-09-14</td></tr><tr><td>检查点回程p95(ms)</td><td class='num'>10.96<span class='badge dim' style='margin-left:6px'>ms</span></td><td class='mono' style='font-size:11px'>mcp_maintenance_smoke.json</td><td class='mono' style='font-size:11px'>2026-09-14</td></tr></tbody></table></div>
+    <details class="tblwrap"><summary>查看全部 168 个实验结果文件索引（ODS 层）</summary>
+      <div class="desc" style="margin-top:8px">完整清单见 <code>数据中台/assets/ods/results_experiments.json</code>，每文件含 SHA-256 指纹、大小、mtime 与标量摘要。</div>
+    </details>
+  </div>
+
+  <div class="grid g2">
+    <div class="panel" id="p-chart"><h2>资产记录规模 <span class="tag">逐资产行数 · 三层一览</span></h2>
+      <div id="chart-assets" class="chart-box"></div></div>
+    <div class="panel"><h2>覆盖率与测试规模</h2>
+      <div id="chart-coverage" class="chart-box"></div>
+      <div class="desc" style="margin-top:8px">覆盖率来自 coverage.xml（cobertura 解析），测试规模来自 tests/ 文件索引。</div>
+    </div>
+  </div>
+
+  <div class="footer">VibeMemory 数据中台 + 评测/测试/监控中台 · 方法论对齐信通院数据中台实践指南 / OneData / OpenCompass 式评测三层抽象 ·
+  资料见 docs/ 目录 · 重新生成：<code>python scripts/build_pages.py</code></div>
+</main>
+<script>/* VMCharts — 零依赖 SVG 图表工具（数据中台/评测中台可视化专用，亮色主题） */
+(function (global) {
+  "use strict";
+  var NS = "http://www.w3.org/2000/svg";
+  /* 主色阶优先：柱状图缺省统一主蓝（多系列折线才用多色），杜绝随机彩虹。
+     多系列折线板为柔和色，避免大红大绿刺眼。 */
+  var PALETTE = ["#2563eb", "#7c3aed", "#0ea5e9", "#14b8a6", "#f59e0b", "#ec4899", "#84cc16", "#64748b"];
+  var C_LABEL = "#6b7280", C_TICK = "#9ca3af", C_VALUE = "#111827", C_TRACK = "rgba(17,24,39,0.06)", C_MESH = "rgba(17,24,39,0.08)";
+
+  function svgEl(tag, attrs) {
+    var el = document.createElementNS(NS, tag);
+    for (var k in attrs) el.setAttribute(k, attrs[k]);
+    return el;
+  }
+  /* ---------- 跟随鼠标的浮层提示（替代原生 <title> 的迟钝体验） ---------- */
+  var tipEl = null;
+  function ensureTip() {
+    if (tipEl) return tipEl;
+    tipEl = document.createElement("div");
+    tipEl.style.cssText = "position:fixed;z-index:99;pointer-events:none;background:rgba(17,24,39,.92);color:#fff;"
+      + "font:11.5px/1.5 -apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;padding:5px 9px;"
+      + "border-radius:6px;max-width:340px;opacity:0;transition:opacity .12s;white-space:pre-wrap;box-shadow:0 4px 14px rgba(0,0,0,.25);";
+    document.body.appendChild(tipEl);
+    return tipEl;
+  }
+  function setTip(el, text) { el.setAttribute("data-tip", text); }
+  function bindTip(svg) {
+    var tip = ensureTip();
+    svg.addEventListener("mousemove", function (e) {
+      var t = e.target;
+      while (t && t !== svg && !(t.dataset && t.dataset.tip)) t = t.parentNode;
+      if (t && t !== svg && t.dataset && t.dataset.tip) {
+        tip.textContent = t.dataset.tip;
+        var x = Math.min(e.clientX + 14, window.innerWidth - tip.offsetWidth - 10);
+        var y = e.clientY - tip.offsetHeight - 12;
+        if (y < 4) y = e.clientY + 16;
+        tip.style.left = Math.max(4, x) + "px"; tip.style.top = y + "px"; tip.style.opacity = "1";
+      } else {
+        tip.style.opacity = "0";
+      }
+    });
+    svg.addEventListener("mouseleave", function () { tip.style.opacity = "0"; });
+  }
+  function mount(el, w, h) {
+    var svg = svgEl("svg", { viewBox: "0 0 " + w + " " + h, preserveAspectRatio: "xMidYMid meet" });
+    el.innerHTML = ""; el.appendChild(svg);
+    bindTip(svg);
+    return svg;
+  }
+  function esc(s) {
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+  function fmt(v) {
+    if (v == null || isNaN(v)) return "-";
+    var a = Math.abs(v);
+    if (a >= 1000) return String(Math.round(v));
+    if (a >= 100) return String(Math.round(v * 10) / 10);
+    if (a >= 1) return String(Math.round(v * 100) / 100);
+    return String(Math.round(v * 1000) / 1000);
+  }
+
+  /* 水平条形图 data: [{name, value, max?, color?}] */
+  function bar(el, data, opts) {
+    opts = opts || {};
+    var W = opts.width || 640, rowH = opts.rowH || 30, padL = opts.labelW || 170, padR = 76, padT = 6, padB = 6;
+    var H = Math.max(80, padT + padB + rowH * data.length);
+    var svg = mount(el, W, H);
+    var max = opts.max != null ? opts.max : Math.max.apply(null, data.map(function (d) { return d.max || d.value; }).concat([1]));
+    data.forEach(function (d, i) {
+      var y = padT + i * rowH;
+      var t = svgEl("text", { x: padL - 10, y: y + rowH / 2 + 4, "text-anchor": "end", "font-size": 11.5, fill: C_LABEL });
+      t.textContent = d.name; svg.appendChild(t);
+      var track = svgEl("rect", { x: padL, y: y + 6, width: W - padL - padR, height: rowH - 12, rx: 4, fill: C_TRACK });
+      svg.appendChild(track);
+      var bw = Math.max(2, (W - padL - padR) * (d.value / max));
+      var c = d.color || PALETTE[0];
+      var r = svgEl("rect", { x: padL, y: y + 6, width: bw, height: rowH - 12, rx: 4, fill: c, opacity: 0.92 });
+      setTip(r, d.name + " : " + (opts.fmt || fmt)(d.value));
+      svg.appendChild(r);
+      var v = svgEl("text", { x: padL + bw + 8, y: y + rowH / 2 + 4, "font-size": 11.5, fill: C_VALUE, "font-family": "Consolas,monospace" });
+      v.textContent = (opts.fmt || fmt)(d.value); svg.appendChild(v);
+    });
+  }
+
+  /* 折线/面积图 series: [{name, values, color?}], labels: []
+     多系列自动关闭面积填充；数值标注仅在 opts.showPoints 时画（单系列不重叠才用）；
+     图例可点击隐藏/显示对应系列。 */
+  function line(el, labels, series, opts) {
+    opts = opts || {};
+    var W = opts.width || 640, H = opts.height || 240;
+    var padL = 44, padR = 14, padT = 14, padB = 30;
+    var svg = mount(el, W, H);
+    var n = labels.length;
+    var allVals = series.reduce(function (a, s) { return a.concat(s.values); }, []);
+    var vmax = opts.max != null ? opts.max : Math.max.apply(null, allVals.concat([1])) * 1.12;
+    var vmin = opts.min != null ? opts.min : 0;
+    function X(i) { return padL + (n <= 1 ? (W - padL - padR) / 2 : (W - padL - padR) * i / (n - 1)); }
+    function Y(v) { return padT + (H - padT - padB) * (1 - (v - vmin) / (vmax - vmin || 1)); }
+    for (var g = 0; g <= 4; g++) {
+      var gv = vmin + (vmax - vmin) * g / 4, gy = Y(gv);
+      svg.appendChild(svgEl("line", { x1: padL, y1: gy, x2: W - padR, y2: gy, class: "gridline" }));
+      var t = svgEl("text", { x: padL - 7, y: gy + 3.5, "text-anchor": "end", "font-size": 10, fill: C_TICK });
+      t.textContent = (opts.fmt || fmt)(gv); svg.appendChild(t);
+    }
+    labels.forEach(function (lb, i) {
+      if (n > 12 && i % Math.ceil(n / 10) !== 0) return;
+      var t = svgEl("text", { x: X(i), y: H - 10, "text-anchor": "middle", "font-size": 10, fill: C_TICK });
+      t.textContent = lb; svg.appendChild(t);
+    });
+    var showArea = series.length === 1 && !opts.noArea;
+    series.forEach(function (s, si) {
+      var c = s.color || PALETTE[si % PALETTE.length];
+      var pts = s.values.map(function (v, i) { return X(i) + "," + Y(v); }).join(" ");
+      function mark(elx) { elx.setAttribute("data-series", si); return elx; }
+      if (showArea) {
+        svg.appendChild(mark(svgEl("polygon", { points: padL + "," + Y(vmin) + " " + pts + " " + X(n - 1) + "," + Y(vmin), fill: c, opacity: 0.08 })));
+      }
+      svg.appendChild(mark(svgEl("polyline", { points: pts, fill: "none", stroke: c, "stroke-width": 2, "stroke-linejoin": "round" })));
+      s.values.forEach(function (v, i) {
+        var dot = mark(svgEl("circle", { cx: X(i), cy: Y(v), r: 3, fill: "#ffffff", stroke: c, "stroke-width": 2 }));
+        setTip(dot, s.name + " · " + labels[i] + " : " + (opts.fmt || fmt)(v));
+        svg.appendChild(dot);
+        if (opts.showPoints && n <= 14) {
+          var t = mark(svgEl("text", { x: X(i), y: Math.max(padT + 9, Y(v) - 8), "text-anchor": "middle", "font-size": 9.5, fill: c, "font-family": "Consolas,monospace" }));
+          t.textContent = (opts.fmt || fmt)(v); svg.appendChild(t);
+        }
+      });
+    });
+    if (series.length > 1 || opts.legend) {
+      var lg = document.createElement("div"); lg.className = "legend";
+      series.forEach(function (s, si) {
+        var c = s.color || PALETTE[si % PALETTE.length];
+        lg.innerHTML += '<span data-si="' + si + '" style="cursor:pointer"><span class="sw" style="background:' + c + '"></span>' + esc(s.name) + "</span>";
+      });
+      el.appendChild(lg);
+      Array.prototype.forEach.call(lg.children, function (sp) {
+        sp.addEventListener("click", function () {
+          var si = sp.getAttribute("data-si");
+          var on = sp.style.opacity !== "0.35";
+          sp.style.opacity = on ? "0.35" : "";
+          sp.style.textDecoration = on ? "line-through" : "";
+          Array.prototype.forEach.call(svg.querySelectorAll('[data-series="' + si + '"]'), function (elx) {
+            elx.style.display = on ? "none" : "";
+          });
+        });
+      });
+    }
+  }
+
+  /* 雷达图 data: [{name, value(0-1)}] */
+  function radar(el, data, opts) {
+    opts = opts || {};
+    var W = opts.width || 420, H = W * 0.86, cx = W / 2, cy = H / 2 + 6, R = Math.min(W, H) / 2 - 44;
+    var svg = mount(el, W, H);
+    var n = data.length;
+    function pt(i, r) {
+      var a = -Math.PI / 2 + 2 * Math.PI * i / n;
+      return [cx + r * Math.cos(a), cy + r * Math.sin(a)];
+    }
+    for (var ring = 1; ring <= 4; ring++) {
+      var pts = [];
+      for (var i = 0; i < n; i++) pts.push(pt(i, R * ring / 4).join(","));
+      svg.appendChild(svgEl("polygon", { points: pts.join(" "), fill: "none", stroke: C_MESH, "stroke-width": 1 }));
+    }
+    for (var i = 0; i < n; i++) {
+      var p = pt(i, R);
+      svg.appendChild(svgEl("line", { x1: cx, y1: cy, x2: p[0], y2: p[1], stroke: C_MESH }));
+      var lp = pt(i, R + 26);
+      var t = svgEl("text", { x: lp[0], y: lp[1] + 4, "text-anchor": "middle", "font-size": 11, fill: C_LABEL });
+      t.textContent = data[i].name; svg.appendChild(t);
+      var vp = pt(i, R + 14);
+      var vt = svgEl("text", { x: vp[0], y: vp[1] + 3, "text-anchor": "middle", "font-size": 9, fill: "#2563eb", "font-family": "Consolas,monospace", opacity: 0.9 });
+      vt.textContent = fmt(data[i].value); svg.appendChild(vt);
+    }
+    var poly = [];
+    data.forEach(function (d, i) { poly.push(pt(i, R * Math.max(0.02, Math.min(1, d.value))).join(",")); });
+    svg.appendChild(svgEl("polygon", { points: poly.join(" "), fill: "rgba(37,99,235,0.14)", stroke: "#2563eb", "stroke-width": 2 }));
+    data.forEach(function (d, i) {
+      var p = pt(i, R * Math.max(0.02, Math.min(1, d.value)));
+      svg.appendChild(svgEl("circle", { cx: p[0], cy: p[1], r: 3.5, fill: "#2563eb" }));
+    });
+  }
+
+  /* 环形进度 value 0-1 */
+  function donut(el, value, opts) {
+    opts = opts || {};
+    var W = opts.width || 180, H = W, cx = W / 2, cy = H / 2, R = W / 2 - 12, r = R - 13;
+    var svg = mount(el, W, H);
+    var v = Math.max(0, Math.min(1, value));
+    var a0 = -Math.PI / 2, a1 = a0 + 2 * Math.PI * v;
+    var large = v > 0.5 ? 1 : 0;
+    var color = opts.color || (v >= 0.85 ? "#059669" : v >= 0.6 ? "#2563eb" : v >= 0.4 ? "#d97706" : "#dc2626");
+    function P(a, rad) { return [cx + rad * Math.cos(a), cy + rad * Math.sin(a)]; }
+    var p0 = P(a0, R), p1 = P(a1, R), q1 = P(a1, r), q0 = P(a0, r);
+    var d = "M " + p0.join(" ") + " A " + R + " " + R + " 0 " + large + " 1 " + p1.join(" ") +
+            " L " + q1.join(" ") + " A " + r + " " + r + " 0 " + large + " 0 " + q0.join(" ") + " Z";
+    if (v > 0.001) svg.appendChild(svgEl("path", { d: d, fill: color, opacity: 0.9 }));
+    var t = svgEl("text", { x: cx, y: cy + 2, "text-anchor": "middle", "font-size": 26, "font-weight": 700, fill: C_VALUE, "font-family": "Consolas,monospace" });
+    t.textContent = Math.round(v * 100) + "%"; svg.appendChild(t);
+    var t2 = svgEl("text", { x: cx, y: cy + 24, "text-anchor": "middle", "font-size": 11, fill: C_LABEL });
+    t2.textContent = opts.label || ""; svg.appendChild(t2);
+  }
+
+  /* 分组小柱状图（榜单/分类型得分）data: [{name, value}] value 0-1 */
+  function vbar(el, data, opts) {
+    opts = opts || {};
+    var W = opts.width || 640, H = opts.height || 230;
+    var padL = 36, padR = 10, padT = 18, padB = 42;
+    var svg = mount(el, W, H);
+    var n = data.length, bw = (W - padL - padR) / n;
+    var fmtFn = opts.fmt || (opts.percent === false ? fmt : function (v) { return Math.round(v * 100) + "%"; });
+    var vmax = opts.max || 1;
+    function Y(v) { return padT + (H - padT - padB) * (1 - v / vmax); }
+    [0, 0.25, 0.5, 0.75, 1].forEach(function (g) {
+      var gv = g * vmax;
+      svg.appendChild(svgEl("line", { x1: padL, y1: Y(gv), x2: W - padR, y2: Y(gv), class: "gridline" }));
+      var t = svgEl("text", { x: padL - 6, y: Y(gv) + 3, "text-anchor": "end", "font-size": 9.5, fill: C_TICK });
+      t.textContent = fmtFn(gv); svg.appendChild(t);
+    });
+    data.forEach(function (d, i) {
+      var x = padL + bw * i + bw * 0.18, w = bw * 0.64;
+      var c = d.color || opts.color || PALETTE[0];
+      var rect = svgEl("rect", { x: x, y: Y(Math.max(0.01, d.value)), width: w, height: H - padB - Y(d.value), rx: 4, fill: c, opacity: 0.9 });
+      setTip(rect, d.name + " : " + fmtFn(d.value));
+      svg.appendChild(rect);
+      var vt = svgEl("text", { x: x + w / 2, y: Y(d.value) - 6, "text-anchor": "middle", "font-size": 10.5, fill: C_VALUE, "font-family": "Consolas,monospace" });
+      vt.textContent = fmtFn(d.value); svg.appendChild(vt);
+      var lt = svgEl("text", { x: x + w / 2, y: H - padB + 16, "text-anchor": "middle", "font-size": 10.5, fill: C_LABEL });
+      lt.textContent = d.name; svg.appendChild(lt);
+    });
+  }
+
+  /* 迷你趋势 sparkline：行式趋势卡用。无轴无框，固定 y 域保证行间可比，悬浮逐点提示 */
+  function spark(el, values, opts) {
+    opts = opts || {};
+    var W = opts.width || 150, H = opts.height || 40, pad = 5;
+    var svg = mount(el, W, H);
+    var n = values.length;
+    var vmax = opts.max != null ? opts.max : Math.max.apply(null, values.concat([1]));
+    var vmin = opts.min != null ? opts.min : 0;
+    function X(i) { return pad + (n <= 1 ? (W - 2 * pad) / 2 : (W - 2 * pad) * i / (n - 1)); }
+    function Y(v) { return pad + (H - 2 * pad) * (1 - (v - vmin) / (vmax - vmin || 1)); }
+    var c = opts.color || PALETTE[0];
+    var pts = values.map(function (v, i) { return X(i) + "," + Y(v); }).join(" ");
+    svg.appendChild(svgEl("polyline", { points: pts, fill: "none", stroke: c, "stroke-width": 1.8,
+      "stroke-linejoin": "round", "stroke-linecap": "round", opacity: 0.85 }));
+    values.forEach(function (v, i) {
+      var dot = svgEl("circle", { cx: X(i), cy: Y(v), r: i === n - 1 ? 3 : 2,
+        fill: i === n - 1 ? c : "#ffffff", stroke: c, "stroke-width": 1.5 });
+      setTip(dot, (opts.labels ? opts.labels[i] : String(i + 1)) + " : " + (opts.fmt || fmt)(v));
+      svg.appendChild(dot);
+    });
+  }
+
+  /* 简单热力格 heatmap: rows[{name, cells:[{v, label?}]}] */
+  function heatmap(el, rows, opts) {
+    opts = opts || {};
+    var W = opts.width || 640, cell = opts.cell || 30, padL = opts.labelW || 130, padT = 6, gap = 4;
+    var H = padT + rows.length * (cell + gap) + 6;
+    var svg = mount(el, W, H);
+    rows.forEach(function (r, ri) {
+      var y = padT + ri * (cell + gap);
+      var t = svgEl("text", { x: padL - 10, y: y + cell / 2 + 4, "text-anchor": "end", "font-size": 11, fill: C_LABEL });
+      t.textContent = r.name; svg.appendChild(t);
+      r.cells.forEach(function (c, ci) {
+        var x = padL + ci * (cell + gap);
+        var v = Math.max(0, Math.min(1, c.v));
+        var col = v >= 0.85 ? "#059669" : v >= 0.6 ? "#2563eb" : v >= 0.4 ? "#d97706" : v > 0 ? "#dc2626" : C_TRACK;
+        var rect = svgEl("rect", { x: x, y: y, width: cell, height: cell, rx: 5, fill: col, opacity: v > 0 ? 0.88 : 1 });
+        setTip(rect, r.name + " · " + (c.label || ci) + " : " + fmt(c.v));
+        svg.appendChild(rect);
+        var vt = svgEl("text", { x: x + cell / 2, y: y + cell / 2 + 3.5, "text-anchor": "middle", "font-size": 9, fill: "#ffffff", "font-family": "Consolas,monospace", "font-weight": 700 });
+        vt.textContent = c.text != null ? c.text : ""; svg.appendChild(vt);
+      });
+    });
+  }
+
+  global.VMCharts = { bar: bar, line: line, radar: radar, donut: donut, vbar: vbar, heatmap: heatmap, spark: spark, PALETTE: PALETTE, fmt: fmt, esc: esc };
+})(window);
+</script>
+<script>/* 四中台交互层 2.0：状态芯片 · 刷新流水线（两步确认）· 表格增强（搜索/排序/空态）· 返回顶部
+   零依赖；file:// 离线打开时自动关闭全部服务器相关功能。 */
+(function () {
+  "use strict";
+  var ONLINE = location.protocol !== "file:";
+
+  /* ================= 状态芯片 + 刷新按钮 ================= */
+  function initStatusAndRefresh() {
+    var chip = document.getElementById("status-chip");
+    var btn = document.getElementById("refresh-btn");
+    if (!ONLINE) return; /* 离线：两者保持隐藏 */
+
+    function esc(s) { return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;"); }
+
+    function renderChip(d) {
+      if (!chip) return;
+      var bits = [];
+      if (d.head) bits.push("HEAD " + esc(d.head));
+      if (d.last_run) bits.push("上次重建 " + esc(String(d.last_run).slice(5, 16)));
+      chip.textContent = bits.join(" · ") || "服务在线";
+      chip.style.display = "inline-block";
+    }
+
+    if (chip) {
+      fetch("/api/status").then(function (r) { return r.json(); }).then(renderChip)
+        .catch(function () { chip.textContent = "服务在线"; chip.style.display = "inline-block"; });
+    }
+    if (!btn) return;
+    btn.style.display = "inline-block";
+
+    var ARM_MS = 3000, armed = false, armTimer = null, busy = false;
+    function disarm() {
+      if (armed) { armed = false; btn.classList.remove("armed"); btn.textContent = "⟳ 刷新数据"; }
+    }
+    function done(btnText) {
+      btn.textContent = btnText;
+      setTimeout(function () { location.reload(); }, 800);
+    }
+    function pollUntilIdle(onIdle) {
+      fetch("/api/status").then(function (r) { return r.json(); }).then(function (d) {
+        if (d.running) setTimeout(function () { pollUntilIdle(onIdle); }, 3000);
+        else onIdle(d);
+      }).catch(function () { setTimeout(function () { pollUntilIdle(onIdle); }, 5000); });
+    }
+
+    btn.addEventListener("click", function () {
+      if (busy) return;
+      if (!armed) { /* 第一步：两步确认，替代原生 confirm() */
+        armed = true; btn.classList.add("armed");
+        btn.textContent = "确认运行流水线？（再点一次）";
+        armTimer = setTimeout(disarm, ARM_MS);
+        return;
+      }
+      clearTimeout(armTimer); armed = false;
+      busy = true; btn.disabled = true; btn.classList.remove("armed");
+      btn.innerHTML = '<span class="spin"></span>流水线运行中…';
+      fetch("/api/refresh", { method: "POST" })
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (d.status === "ok") {
+            done("✅ 已完成，刷新页面…");
+          } else if (d.status === "busy") {
+            btn.textContent = "流水线已在运行，等待完成…";
+            pollUntilIdle(function () { done("✅ 已完成，刷新页面…"); });
+          } else {
+            btn.textContent = "❌ " + String(d.detail || d.status || "失败").slice(-60);
+            btn.disabled = false; busy = false;
+          }
+        })
+        .catch(function (e) {
+          btn.textContent = "❌ " + e;
+          btn.disabled = false; busy = false;
+        });
+    });
+  }
+
+  /* ================= 返回顶部 ================= */
+  function initToTop() {
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "to-top"; b.title = "返回顶部"; b.textContent = "↑";
+    document.body.appendChild(b);
+    var sync = function () { b.classList.toggle("show", window.scrollY > 500); };
+    window.addEventListener("scroll", sync, { passive: true });
+    sync();
+    b.addEventListener("click", function () { window.scrollTo({ top: 0, behavior: "smooth" }); });
+  }
+
+  /* ================= KPI 卡锚点跳转（data-target=面板 id） ================= */
+  function initKpiJump() {
+    Array.prototype.forEach.call(document.querySelectorAll(".kpi[data-target]"), function (k) {
+      k.addEventListener("click", function () {
+        var t = document.getElementById(k.getAttribute("data-target"));
+        if (!t) return;
+        t.scrollIntoView({ behavior: "smooth", block: "start" });
+        t.classList.remove("flash");
+        void t.offsetWidth; /* 重启动画 */
+        t.classList.add("flash");
+        setTimeout(function () { t.classList.remove("flash"); }, 1000);
+      });
+    });
+  }
+
+  /* ================= 表格行展开（data-detail=JSON 明细） =================
+     点击含 data-detail 的行 → 在其下插入全宽明细行；排序/搜索重排后保持展开状态。 */
+  function enhanceExpand(table) {
+    var tbody = table.tBodies[0];
+    var nCols = table.tHead ? table.tHead.rows[0].cells.length : 0;
+    var expanded = [];
+    function buildDetail(row) {
+      var d;
+      try { d = JSON.parse(row.getAttribute("data-detail")); } catch (e) { return null; }
+      var td = document.createElement("td");
+      td.colSpan = nCols;
+      var inner = document.createElement("div");
+      inner.className = "row-detail";
+      Object.keys(d).forEach(function (k) {
+        var kv = document.createElement("div"); kv.className = "kv";
+        var lab = document.createElement("span"); lab.textContent = k;
+        var val = document.createElement("b"); val.textContent = d[k];
+        kv.appendChild(lab); kv.appendChild(val);
+        inner.appendChild(kv);
+      });
+      td.appendChild(inner);
+      var tr = document.createElement("tr");
+      tr.className = "detail-row";
+      tr.appendChild(td);
+      return tr;
+    }
+    function syncDetail(row) {
+      var next = row.nextSibling;
+      if (next && next.className === "detail-row") next.parentNode.removeChild(next);
+      if (expanded.indexOf(row) !== -1) {
+        var d = buildDetail(row);
+        if (d) row.parentNode.insertBefore(d, row.nextSibling);
+        row.classList.add("open");
+      } else {
+        row.classList.remove("open");
+      }
+    }
+    Array.prototype.forEach.call(tbody.rows, function (row) {
+      if (!row.getAttribute("data-detail")) return;
+      row.classList.add("has-detail");
+      row.addEventListener("click", function (ev) {
+        if (ev.target.closest && ev.target.closest("a,button,input")) return;
+        var i = expanded.indexOf(row);
+        if (i === -1) expanded.push(row); else expanded.splice(i, 1);
+        syncDetail(row);
+      });
+    });
+    table._syncExpanded = function () {
+      Array.prototype.forEach.call(tbody.rows, function (row) {
+        if (expanded.indexOf(row) !== -1) syncDetail(row);
+      });
+    };
+  }
+
+  /* ================= 表格增强：搜索 / 排序 / 分页兜底 =================
+     用法：<table class="tbl" data-enhance>。行数少时全量渲染，超过阈值才分页。 */
+  var PAGE_SIZE = 60;
+
+  function numVal(t) {
+    /* 从单元格文本提取首个数字（支持 1,360 / 87.9% / 12.07ms / 518.8s / 11 个文件） */
+    var m = String(t).replace(/,/g, "").match(/-?\d+(\.\d+)?/);
+    return m ? parseFloat(m[0]) : null;
+  }
+
+  function enhanceTable(table) {
+    var thead = table.tHead, tbody = table.tBodies[0];
+    if (!thead || !tbody || thead.rows.length === 0) return;
+    enhanceExpand(table);
+    var headers = Array.prototype.slice.call(thead.rows[0].cells);
+    var rows = Array.prototype.slice.call(tbody.rows);
+    if (!rows.length || !headers.length) return;
+
+    var state = { q: "", sortCol: -1, sortDir: 1, page: 0 };
+
+    /* 工具条（插在表格所在容器里、表格之前） */
+    var tools = document.createElement("div"); tools.className = "tbl-tools";
+    var wrapEl = document.createElement("div"); wrapEl.className = "tbl-search-wrap";
+    var search = document.createElement("input");
+    search.type = "search"; search.className = "tbl-search"; search.placeholder = "搜索本表…";
+    var clearBtn = document.createElement("button");
+    clearBtn.type = "button"; clearBtn.className = "tbl-clear"; clearBtn.textContent = "✕"; clearBtn.title = "清空";
+    wrapEl.appendChild(search); wrapEl.appendChild(clearBtn);
+    var count = document.createElement("span"); count.className = "tbl-count";
+    tools.appendChild(wrapEl); tools.appendChild(count);
+    table.parentNode.insertBefore(tools, table);
+
+    /* 分页条（仅超长表显示） */
+    var pager = document.createElement("div"); pager.className = "pgn"; pager.style.display = "none";
+    var prev = document.createElement("button"); prev.type = "button"; prev.textContent = "‹ 上一页";
+    var next = document.createElement("button"); next.type = "button"; next.textContent = "下一页 ›";
+    pager.appendChild(prev); pager.appendChild(next);
+    table.parentNode.insertBefore(pager, table.nextSibling);
+
+    function cellText(row, i) { return row.cells[i] ? row.cells[i].textContent.trim() : ""; }
+
+    function render() {
+      var q = state.q.toLowerCase();
+      var view = rows.filter(function (r) {
+        return !q || r.textContent.toLowerCase().indexOf(q) !== -1;
+      });
+      if (state.sortCol >= 0) {
+        var col = state.sortCol, dir = state.sortDir;
+        view.sort(function (a, b) {
+          var ta = cellText(a, col), tb = cellText(b, col);
+          var na = numVal(ta), nb = numVal(tb);
+          if (na !== null && nb !== null) return (na - nb) * dir;
+          if (na !== null) return 1;          /* 无值行沉底，不随方向翻转 */
+          if (nb !== null) return -1;
+          return ta.localeCompare(tb, "zh-Hans-CN") * dir;
+        });
+      }
+      var total = view.length;
+      var pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+      if (state.page >= pages) state.page = pages - 1;
+      var start = state.page * PAGE_SIZE;
+      var slice = pages > 1 ? view.slice(start, start + PAGE_SIZE) : view;
+
+      tbody.textContent = "";
+      if (!total) {
+        var tr = document.createElement("tr");
+        var td = document.createElement("td");
+        td.colSpan = headers.length; td.className = "tbl-empty";
+        td.textContent = q ? "没有匹配「" + state.q + "」的行" : "暂无数据";
+        tr.appendChild(td); tbody.appendChild(tr);
+      } else {
+        slice.forEach(function (r) { tbody.appendChild(r); });
+      }
+
+      count.textContent = "共 " + total + " 行" + (q ? "（筛选自 " + rows.length + " 行）" : "") +
+        (pages > 1 ? " · 第 " + (state.page + 1) + " / " + pages + " 页" : "");
+      if (pages > 1) {
+        pager.style.display = "flex";
+        prev.disabled = state.page === 0;
+        next.disabled = state.page >= pages - 1;
+      } else {
+        pager.style.display = "none";
+      }
+      if (table._syncExpanded) table._syncExpanded();
+    }
+
+    function syncClear() { clearBtn.style.display = search.value ? "block" : "none"; }
+
+    search.addEventListener("input", function () {
+      state.q = search.value; state.page = 0; syncClear(); render();
+    });
+    clearBtn.addEventListener("click", function () {
+      search.value = ""; state.q = ""; state.page = 0; syncClear(); render(); search.focus();
+    });
+    prev.addEventListener("click", function () { if (state.page > 0) { state.page--; render(); } });
+    next.addEventListener("click", function () { state.page++; render(); });
+
+    headers.forEach(function (th, i) {
+      th.classList.add("th-sort");
+      th.addEventListener("click", function () {
+        if (state.sortCol === i) state.sortDir *= -1;
+        else { state.sortCol = i; state.sortDir = 1; }
+        headers.forEach(function (h, j) {
+          h.classList.remove("sort-asc", "sort-desc");
+          if (j === state.sortCol) h.classList.add(state.sortDir === 1 ? "sort-asc" : "sort-desc");
+        });
+        state.page = 0; render();
+      });
+    });
+
+    render();
+  }
+
+  function initTables() {
+    Array.prototype.forEach.call(document.querySelectorAll("table[data-enhance]"), enhanceTable);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", function () { initStatusAndRefresh(); initTables(); initToTop(); initKpiJump(); });
+  } else {
+    initStatusAndRefresh(); initTables(); initToTop(); initKpiJump();
+  }
+})();
+</script>
+<script>
+window.DATA = {"quality_summary": {"overall": 0.9964, "dimensions": {"completeness": 0.9782, "uniqueness": 1.0, "consistency": 1.0, "accuracy": 1.0, "timeliness": 1.0, "validity": 1.0}, "asset_count": 12, "threshold_warn": 0.85, "status": "PASS"}, "repo_health": {"asset": "dws_repo_health", "generated_at": "2026-11-12T01:58:45+08:00", "description": "仓库健康主题（汇总指标）", "version": "0.3.0", "python_required": ">=3.10", "dependencies": 2, "entry_points": 6, "test_files": 112, "test_funcs": 853, "coverage_line_rate": 0.8795, "coverage_branch_rate": 0.8008, "coverage_lines": 4482, "coverage_lines_valid": 5096, "recent_commits": 60, "last_commit_at": "2026-10-31 18:30:07 +0800"}, "catalog": {"sources": [{"id": "cz_events", "kind": "jsonl_file", "path": "C:\\Users\\ASYS\\Desktop\\codex-zcode-team\\events.jsonl", "status": "ok", "desc": "智能体协作事件流（行数/事件类型统计摘要）", "origin": "Codex-ZCode 多智能体协作 来源", "project": "codex-zcode-team", "sha256": "5c593c0169db671053f03f356432addc848b8cfe5077ba354631101404cf8b2a", "records": 11, "bytes": 1588, "mtime": "2026-10-07T11:57:52", "collected_at": "2026-11-12T01:58:12+08:00", "changed_since_last": false}, {"id": "cz_doctor", "kind": "json_file", "path": "C:\\Users\\ASYS\\Desktop\\codex-zcode-team\\doctor.json", "status": "ok", "desc": "工作区健康诊断快照", "origin": "Codex-ZCode 多智能体协作 来源", "project": "codex-zcode-team", "sha256": "2df4d6b78ee5dc799a60a931dd785f37ab174d25e3aeb31bc2115a1ad2cb20b1", "records": null, "bytes": 448, "mtime": "2026-10-06T16:30:29", "collected_at": "2026-11-12T01:58:12+08:00", "changed_since_last": false}, {"id": "cz_docs", "kind": "markdown_dir", "path": "C:\\Users\\ASYS\\Desktop\\codex-zcode-team", "status": "ok", "desc": "协作规范与指南文档（AGENTS.md/README 等）", "origin": "Codex-ZCode 多智能体协作 来源", "project": "codex-zcode-team", "sha256": null, "records": 6, "bytes": null, "mtime": null, "collected_at": "2026-11-12T01:58:12+08:00", "changed_since_last": null}, {"id": "kb_docs", "kind": "markdown_dir", "path": "C:\\Users\\ASYS\\Desktop\\知识库", "status": "ok", "desc": "实验知识文档全量（标题结构/日期范围/篇幅摘要，逐文件 SHA-256）", "origin": "知识库（VibeMemory 实验知识文档） 来源", "project": "knowledge-base", "sha256": null, "records": 40, "bytes": null, "mtime": null, "collected_at": "2026-11-12T01:58:12+08:00", "changed_since_last": null}, {"id": "kb_files", "kind": "file_dir", "path": "C:\\Users\\ASYS\\Desktop\\知识库", "status": "ok", "desc": "知识库顶层文件清单（225 个文件的指纹台账）", "origin": "知识库（VibeMemory 实验知识文档） 来源", "project": "knowledge-base", "sha256": null, "records": 227, "bytes": null, "mtime": null, "collected_at": "2026-11-12T01:58:12+08:00", "changed_since_last": null}, {"id": "results_experiments", "kind": "json_dir", "path": "C:\\Users\\ASYS\\Desktop\\VibeMemory\\results", "status": "ok", "desc": "实验结果存档（MCP 维护冒烟、磁盘 soak、LoCoMo/LongMemEval 试跑等，顶层带 source/source_sha256/limits 溯源头）", "origin": "VibeMemory 图记忆 SDK 来源", "project": "vibememory", "sha256": null, "records": 168, "bytes": null, "mtime": null, "collected_at": "2026-11-12T01:58:13+08:00", "changed_since_last": null}, {"id": "coverage_xml", "kind": "coverage_xml", "path": "C:\\Users\\ASYS\\Desktop\\VibeMemory\\coverage.xml", "status": "ok", "desc": "pytest-cov 覆盖率报告（行/分支覆盖率）", "origin": "VibeMemory 图记忆 SDK 来源", "project": "vibememory", "sha256": "070e9e5a28c61a6d8754ff5e520ab8679ca1131ec24b24d7f3c478bdde0b2aa2", "records": null, "bytes": 244030, "mtime": "2026-11-11T10:08:45", "collected_at": "2026-11-12T01:58:13+08:00", "changed_since_last": false}, {"id": "status_md", "kind": "markdown", "path": "C:\\Users\\ASYS\\Desktop\\VibeMemory\\STATUS.md", "status": "ok", "desc": "项目状态台账（能力边界、待验证事项、按日期条目）", "origin": "VibeMemory 图记忆 SDK 来源", "project": "vibememory", "sha256": "8e6ebfee6860eaaeab2b6055a6c62609632ee010fe49381e32d3a0bc29f5a666", "records": null, "bytes": 124976, "mtime": "2026-10-01T00:24:28", "collected_at": "2026-11-12T01:58:13+08:00", "changed_since_last": false}, {"id": "changelog_md", "kind": "markdown", "path": "C:\\Users\\ASYS\\Desktop\\VibeMemory\\CHANGELOG.md", "status": "ok", "desc": "版本演进记录", "origin": "VibeMemory 图记忆 SDK 来源", "project": "vibememory", "sha256": "d70b59bb48aab24e742ed8394dd3c3d7ee1cbeb4a0d2ce08248f0ec84ad1a775", "records": null, "bytes": 8525, "mtime": "2026-11-08T20:15:35", "collected_at": "2026-11-12T01:58:13+08:00", "changed_since_last": false}, {"id": "seed_memory", "kind": "json_file", "path": "C:\\Users\\ASYS\\Desktop\\VibeMemory\\vibe_memory\\seed_memory.json", "status": "ok", "desc": "出厂种子记忆（结构样本）", "origin": "VibeMemory 图记忆 SDK 来源", "project": "vibememory", "sha256": "39d2e9fb876599f9f32922657cb7a717f9d96c5afe3b000487f4ad0e5b11f8d2", "records": null, "bytes": 2117, "mtime": "2026-08-21T16:46:37", "collected_at": "2026-11-12T01:58:13+08:00", "changed_since_last": false}, {"id": "tests_index", "kind": "test_dir", "path": "C:\\Users\\ASYS\\Desktop\\VibeMemory\\tests", "status": "ok", "desc": "回归测试文件清单", "origin": "VibeMemory 图记忆 SDK 来源", "project": "vibememory", "sha256": null, "records": null, "bytes": null, "mtime": null, "collected_at": "2026-11-12T01:58:13+08:00", "changed_since_last": null}, {"id": "git_activity", "kind": "git_log", "path": "C:\\Users\\ASYS\\Desktop\\VibeMemory", "status": "ok", "desc": "近期提交活动", "origin": "VibeMemory 图记忆 SDK 来源", "project": "vibememory", "sha256": null, "records": null, "bytes": null, "mtime": null, "collected_at": "2026-11-12T01:58:13+08:00", "changed_since_last": null}, {"id": "repo_meta", "kind": "toml_file", "path": "C:\\Users\\ASYS\\Desktop\\VibeMemory\\pyproject.toml", "status": "ok", "desc": "项目元数据（版本、依赖、Python 要求）", "origin": "VibeMemory 图记忆 SDK 来源", "project": "vibememory", "sha256": "a60e44b150cc07f78c34b8ed85e14554fe6ccd8f222da34879d34ee1fdbf21cc", "records": null, "bytes": 2003, "mtime": "2026-10-02T23:08:16", "collected_at": "2026-11-12T01:58:13+08:00", "changed_since_last": false}, {"id": "eval_runs", "kind": "json_dir", "path": "C:\\Users\\ASYS\\Desktop\\VibeMemory-中台\\评测中台\\runs", "status": "ok", "desc": "评测中台运行存档（评测即数据资产，回流数据中台）", "origin": "评测中台", "project": "vibememory", "sha256": null, "records": 109, "bytes": null, "mtime": null, "collected_at": "2026-11-12T01:58:13+08:00", "changed_since_last": null}, {"id": "ans_runs", "kind": "json_dir", "path": "C:\\Users\\ASYS\\Desktop\\VibeMemory-中台\\评测中台\\runs", "status": "ok", "desc": "答案级评测存档（LLM-judge 协议：生成回答+语义判定，回流数据中台）", "origin": "评测中台", "project": "vibememory", "sha256": null, "records": 12, "bytes": null, "mtime": null, "collected_at": "2026-11-12T01:58:13+08:00", "changed_since_last": null}, {"id": "evalsets_local", "kind": "jsonl_dir", "path": "C:\\Users\\ASYS\\Desktop\\VibeMemory-中台\\评测中台\\evalsets", "status": "ok", "desc": "内建+批量生成的评测集资产（用例数/类型分布/隔离题数/指纹）", "origin": "评测中台", "project": "vibememory", "sha256": null, "records": 14, "bytes": null, "mtime": null, "collected_at": "2026-11-12T01:58:13+08:00", "changed_since_last": null}, {"id": "evalset_manifest", "kind": "json_file", "path": "C:\\Users\\ASYS\\Desktop\\VibeMemory-中台\\评测中台\\evalsets\\gen_manifest.json", "status": "ok", "desc": "生成评测集清单（种子/参数/逐文件指纹）", "origin": "评测中台", "project": "vibememory", "sha256": "1518d64a0841e29ca36a8d55ae374e068e1c9382f4a41e65b60737f89d614ce6", "records": null, "bytes": 1980, "mtime": "2026-11-08T01:08:25", "collected_at": "2026-11-12T01:58:13+08:00", "changed_since_last": false}, {"id": "benchmarks_local", "kind": "jsonl_dir", "path": "C:\\Users\\ASYS\\Desktop\\VibeMemory-中台\\评测中台\\benchmarks", "status": "ok", "desc": "公开基准转换评测集（LoCoMo 10 段 / LongMemEval-S 子集）", "origin": "评测中台", "project": "vibememory", "sha256": null, "records": 16, "bytes": null, "mtime": null, "collected_at": "2026-11-12T01:58:13+08:00", "changed_since_last": null}, {"id": "datasets_public", "kind": "file_dir", "path": "C:\\Users\\ASYS\\Desktop\\VibeMemory-中台\\评测中台\\datasets", "status": "ok", "desc": "公开基准原始数据集（LoCoMo/LongMemEval-S/PersonaMem + 指纹卡）", "origin": "评测中台", "project": "vibememory", "sha256": null, "records": 4010, "bytes": null, "mtime": null, "collected_at": "2026-11-12T01:58:15+08:00", "changed_since_last": null}, {"id": "test_runs", "kind": "json_dir", "path": "C:\\Users\\ASYS\\Desktop\\VibeMemory-中台\\测试中台\\runs", "status": "ok", "desc": "pytest 回归运行存档（通过率/覆盖率/失败明细/门禁，回流数据中台）", "origin": "测试中台", "project": "vibememory", "sha256": null, "records": 5, "bytes": null, "mtime": null, "collected_at": "2026-11-12T01:58:44+08:00", "changed_since_last": null}, {"id": "obs_runs", "kind": "json_dir", "path": "C:\\Users\\ASYS\\Desktop\\VibeMemory-中台\\监控中台\\runs", "status": "ok", "desc": "SDK 运行时指标存档（延迟/命中率/降级事件，回流数据中台）", "origin": "监控中台", "project": "vibememory", "sha256": null, "records": 6, "bytes": null, "mtime": null, "collected_at": "2026-11-12T01:58:44+08:00", "changed_since_last": null}], "assets": [{"id": "ods_*", "layer": "ods", "path": "数据中台/assets/ods/", "desc": "9 类可信来源的原始快照（指纹+记录数）", "rows": 21, "lineage": {"upstream": ["cz_events", "cz_doctor", "cz_docs", "kb_docs", "kb_files", "results_experiments", "coverage_xml", "status_md", "changelog_md", "seed_memory", "tests_index", "git_activity", "repo_meta", "eval_runs", "ans_runs", "evalsets_local", "evalset_manifest", "benchmarks_local", "datasets_public", "test_runs", "obs_runs"], "transforms": ["snapshot", "checksum"]}, "version": {"upstream_revision": "eaaf1e7", "pipeline_commit": "a850131051ee", "dataset_sha256": null}}, {"id": "dwd_experiments", "layer": "dwd", "path": "数据中台/assets/dwd/experiments.json", "desc": "实验结果明细", "rows": 168, "fields": ["file", "sha256", "dataset", "mode", "limits", "metric_points[]"], "lineage": {"upstream": ["results_experiments"], "transforms": ["parse", "flatten", "normalize"]}, "version": {"upstream_revision": "eaaf1e7", "pipeline_commit": "a850131051ee", "dataset_sha256": "0db4ae50f41f4f4252e89873155522387a00976c646d35c0be6bccae67abe6be"}, "quality": {"overall": 0.9564, "dims": {"completeness": 0.7381, "uniqueness": 1.0, "consistency": 1.0, "accuracy": 1.0, "timeliness": 1.0, "validity": 1.0}}}, {"id": "dwd_coverage", "layer": "dwd", "path": "数据中台/assets/dwd/coverage.json", "desc": "覆盖率明细", "rows": 11, "fields": ["overall.line_rate", "overall.branch_rate", "packages[]", "weakest_classes[]"], "lineage": {"upstream": ["coverage_xml"], "transforms": ["xml-parse", "rollup"]}, "version": {"upstream_revision": "eaaf1e7", "pipeline_commit": "a850131051ee", "dataset_sha256": "48e0cefb6aa6124f3fc39f2a314681a2ba177a0c04a1802429c01f59887a6e41"}, "quality": {"overall": 1.0, "dims": {"completeness": 1.0, "uniqueness": 1.0, "consistency": 1.0, "accuracy": 1.0, "timeliness": 1.0, "validity": 1.0}}}, {"id": "dwd_docs", "layer": "dwd", "path": "数据中台/assets/dwd/docs.json", "desc": "状态台账与版本演进明细", "rows": 68, "fields": ["status.sections[]", "changelog.sections[]"], "lineage": {"upstream": ["status_md", "changelog_md"], "transforms": ["heading-index", "date-scan"]}, "version": {"upstream_revision": "eaaf1e7", "pipeline_commit": "a850131051ee", "dataset_sha256": "72417b779b218f7664dd9c107029b79c907e989526af23f51ff53ff5d3e9d781"}}, {"id": "dwd_repo", "layer": "dwd", "path": "数据中台/assets/dwd/repo.json", "desc": "仓库元数据/测试索引/提交活动", "rows": 1, "fields": ["meta", "tests", "git", "seed_memory"], "lineage": {"upstream": ["repo_meta", "tests_index", "git_activity", "seed_memory"], "transforms": ["merge", "count"]}, "version": {"upstream_revision": "eaaf1e7", "pipeline_commit": "a850131051ee", "dataset_sha256": "d69278146bf07080348fa7e72555535a797a408e5efe1247830279472592c619"}}, {"id": "dwd_eval_runs", "layer": "dwd", "path": "数据中台/assets/dwd/eval_runs.json", "desc": "评测运行存档明细（评测中台回流）", "rows": 91, "fields": ["run_id", "evalset", "metrics", "per_type", "environment"], "lineage": {"upstream": ["eval_runs"], "transforms": ["parse", "project"]}, "version": {"upstream_revision": "eaaf1e7", "pipeline_commit": "a850131051ee", "dataset_sha256": "b6b6e66efe98753a7747ba4a1b16de5185ff50a5c7f0a8342d0702558c2ef40f"}, "quality": {"overall": 1.0, "dims": {"completeness": 1.0, "uniqueness": 1.0, "consistency": 1.0, "accuracy": 1.0, "timeliness": 1.0, "validity": 1.0}}}, {"id": "dwd_eval_items", "layer": "dwd", "path": "数据中台/assets/dwd/eval_items.json", "desc": "评测逐题明细（运行存档 items 炸开，万级记录主体）", "rows": 8742, "fields": ["run_id", "evalset", "case_id", "type", "query", "hit_at_k", "session_recall", "ndcg"], "lineage": {"upstream": ["eval_runs"], "transforms": ["explode", "project", "checksum"]}, "version": {"upstream_revision": "eaaf1e7", "pipeline_commit": "a850131051ee", "dataset_sha256": "8cfd6abde1dc2a48b182cc3981113ff69c2cacc7b8a61e2dc4fde18230e335b8"}, "quality": {"overall": 1.0, "dims": {"completeness": 1.0, "uniqueness": 1.0, "consistency": 1.0, "accuracy": 1.0, "timeliness": 1.0, "validity": 1.0}}}, {"id": "dwd_evalsets", "layer": "dwd", "path": "数据中台/assets/dwd/evalsets.json", "desc": "评测集资产明细（内建+生成+公开基准转换）", "rows": 30, "fields": ["file", "cases", "type_counts", "isolate_items", "sha256", "origin"], "lineage": {"upstream": ["evalsets_local", "benchmarks_local"], "transforms": ["index", "count"]}, "version": {"upstream_revision": "eaaf1e7", "pipeline_commit": "a850131051ee", "dataset_sha256": "ced794def647a29b40ecfca34f050bf3339038e95533b7d0cc74dfaccb6b7a1f"}, "quality": {"overall": 1.0, "dims": {"completeness": 1.0, "uniqueness": 1.0, "consistency": 1.0, "accuracy": 1.0, "timeliness": 1.0, "validity": 1.0}}}, {"id": "dwd_datasets", "layer": "dwd", "path": "数据中台/assets/dwd/datasets.json", "desc": "公开基准原始数据集明细（含指纹卡）", "rows": 4010, "fields": ["file", "sha256", "bytes", "cards[]"], "lineage": {"upstream": ["datasets_public"], "transforms": ["index", "checksum", "card-merge"]}, "version": {"upstream_revision": "eaaf1e7", "pipeline_commit": "a850131051ee", "dataset_sha256": "d0a18722727236757bbfcda16d3861ee2604d80af8c98286878235ceab3fab8c"}, "quality": {"overall": 1.0, "dims": {"completeness": 1.0, "uniqueness": 1.0, "consistency": 1.0, "accuracy": 1.0, "timeliness": 1.0, "validity": 1.0}}}, {"id": "dwd_test_runs", "layer": "dwd", "path": "数据中台/assets/dwd/test_runs.json", "desc": "pytest 回归运行明细（测试中台回流）", "rows": 5, "fields": ["run_id", "summary.pass_rate", "coverage", "gate", "failures_detail"], "lineage": {"upstream": ["test_runs"], "transforms": ["parse", "project"]}, "version": {"upstream_revision": "eaaf1e7", "pipeline_commit": "a850131051ee", "dataset_sha256": "5ebe7890df118277cb1bfd21aadd245103721d379a3bcf46e1971cc958bc0f77"}, "quality": {"overall": 1.0, "dims": {"completeness": 1.0, "uniqueness": 1.0, "consistency": 1.0, "accuracy": 1.0, "timeliness": 1.0, "validity": 1.0}}}, {"id": "dwd_test_cases", "layer": "dwd", "path": "数据中台/assets/dwd/test_cases.json", "desc": "pytest 逐用例明细（junitxml 炸开）", "rows": 5513, "fields": ["run_ts", "classname", "case", "time_s", "status"], "lineage": {"upstream": ["test_runs"], "transforms": ["explode", "project"]}, "version": {"upstream_revision": "eaaf1e7", "pipeline_commit": "a850131051ee", "dataset_sha256": "2182c950be8d75aceb3484a3af9e60a512d2264c3c4e497aaaa395780c3d787b"}}, {"id": "dwd_obs_runs", "layer": "dwd", "path": "数据中台/assets/dwd/obs_runs.json", "desc": "运行时指标明细（监控中台回流）", "rows": 6, "fields": ["run_id", "store.p95_ms", "recall.p95_ms", "hit_rate", "degradation"], "lineage": {"upstream": ["obs_runs"], "transforms": ["parse", "project"]}, "version": {"upstream_revision": "eaaf1e7", "pipeline_commit": "a850131051ee", "dataset_sha256": "b7186ddf2e69f7bdf6e40a8339e0d29586672d6d5913e427f8298f565002cb5a"}, "quality": {"overall": 1.0, "dims": {"completeness": 1.0, "uniqueness": 1.0, "consistency": 1.0, "accuracy": 1.0, "timeliness": 1.0, "validity": 1.0}}}, {"id": "dws_repo_health", "layer": "dws", "path": "数据中台/assets/dws/repo_health.json", "desc": "仓库健康指标主题", "rows": 1, "fields": ["version", "test_files", "test_funcs", "coverage_line_rate", "recent_commits"], "lineage": {"upstream": ["dwd_repo", "dwd_coverage"], "transforms": ["aggregate"]}, "version": {"upstream_revision": "eaaf1e7", "pipeline_commit": "a850131051ee", "dataset_sha256": "424d6c6f865c2f3570ff16f6449048bc645d5a0636d55bc9d4f0c8f59f0b05bb"}, "quality": {"overall": 1.0, "dims": {"completeness": 1.0, "uniqueness": 1.0, "consistency": 1.0, "accuracy": 1.0, "timeliness": 1.0, "validity": 1.0}}}, {"id": "dws_experiment_metrics", "layer": "dws", "path": "数据中台/assets/dws/experiment_metrics.json", "desc": "核心实验指标主题", "rows": 11, "fields": ["experiment_file", "metric", "value", "unit", "source_path"], "lineage": {"upstream": ["dwd_experiments"], "transforms": ["curate", "unit-convert"]}, "version": {"upstream_revision": "eaaf1e7", "pipeline_commit": "a850131051ee", "dataset_sha256": "da96a9118d0bbf38fbb615b7292060b65de5d8f97dd0ebf034038daeae264819"}, "quality": {"overall": 1.0, "dims": {"completeness": 1.0, "uniqueness": 1.0, "consistency": 1.0, "accuracy": 1.0, "timeliness": 1.0, "validity": 1.0}}}, {"id": "dws_eval_summary", "layer": "dws", "path": "数据中台/assets/dws/eval_summary.json", "desc": "评测结果主题（按评测集）", "rows": 20, "fields": ["evalset", "latest_metrics", "per_type", "history[]"], "lineage": {"upstream": ["dwd_eval_runs"], "transforms": ["group-by", "latest"]}, "version": {"upstream_revision": "eaaf1e7", "pipeline_commit": "a850131051ee", "dataset_sha256": "9da974b12c3b848e98b4a835b25d12446c7e488991a0748766f7c3ad49a630d7"}, "quality": {"overall": 1.0, "dims": {"completeness": 1.0, "uniqueness": 1.0, "consistency": 1.0, "accuracy": 1.0, "timeliness": 1.0, "validity": 1.0}}}, {"id": "dws_weekly", "layer": "dws", "path": "数据中台/assets/dws/weekly.json", "desc": "周对比主题（本周 vs 上周：命中率/通过率，回答「这周比上周好吗」）", "rows": 1, "fields": ["eval.this/last", "test.this/last", "overall_verdict", "answer"], "lineage": {"upstream": ["dwd_eval_items", "dwd_test_cases", "dwd_obs_runs"], "transforms": ["window-agg", "compare"]}, "version": {"upstream_revision": "eaaf1e7", "pipeline_commit": "a850131051ee", "dataset_sha256": "65b624dc93bad2f8f2a3889ce7a9c4067e3c3d1f77e1372d56e6c5ed91aa1eae"}, "quality": {"overall": 1.0, "dims": {"completeness": 1.0, "uniqueness": 1.0, "consistency": 1.0, "accuracy": 1.0, "timeliness": 1.0, "validity": 1.0}}}]}};
+
+(function(){
+  var assets = DATA.catalog.assets.slice().sort(function(a,b){ return (b.rows||0)-(a.rows||0); });
+  VMCharts.bar(document.getElementById('chart-assets'), assets.map(function(a){
+    return {name: a.id, value: a.rows || 0};
+  }), {labelW: 150, rowH: 21, fmt: function(v){ return v.toLocaleString(); }});
+  var H = DATA.repo_health;
+  VMCharts.bar(document.getElementById('chart-coverage'), [
+    {name:'行覆盖率', value:H.coverage_line_rate, max:1, color:'#2563eb'},
+    {name:'分支覆盖率', value:H.coverage_branch_rate, max:1, color:'#60a5fa'},
+    {name:'测试文件/112', value:H.test_files/112, max:1, color:'#93c5fd'}
+  ], {fmt:function(v){return (v*100).toFixed(1)+'%';}, max:1});
+})();
+
+</script>
+</body>
+</html>

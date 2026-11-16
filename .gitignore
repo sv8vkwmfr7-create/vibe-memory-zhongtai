@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.pyc
+
+# 本地运行产物（数据不入库：runs 存档与 logs 由定时流水线在本机积累）
+logs/
+runs/*.junit.xml
+runs/cov-*.xml
+
+# 含服务器凭证，只在本地保存，禁止入库
+docs/交接文档.md
+
+# IDE / 工具
+.zcode/
