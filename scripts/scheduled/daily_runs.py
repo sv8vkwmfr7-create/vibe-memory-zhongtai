@@ -3,6 +3,7 @@
 """数据中台 · 定时产出引擎（验收标准第 3 条「数据自己长」的落地）
 
 每天一轮：
+  ⓪ 同步被测仓库  git fetch + fast-forward 本机 VibeMemory 副本（push 过的新代码自动进当日基线）
   ① 评测  run_eval.py --all            → 评测中台/runs/run-*.json
   ② 测试  run_tests.py --scope full    → 测试中台/runs/test-*.json（+ 仓库 coverage.xml）
   ③ 监控  collect_runtime_metrics.py   → 监控中台/runs/obs-*.json
@@ -10,6 +11,8 @@
 
 幂等：某类存档当天已有产出则自动跳过该件（防计划任务重复触发/手动重复跑）；
 同步失败不阻断（数据留在本机，下一轮补传）。
+⓪ 的安全纪律：只 fast-forward——本机与远端分叉或有未提交改动时绝不自动合并，
+如实记日志后用本机现状继续跑（存档 revision 字段会如实记录实际被测版本）。
 
 用法：
     python daily_runs.py             # 正常轮次（幂等跳过）
@@ -165,6 +168,43 @@ def sync_to_server(log_f) -> bool:
     return True
 
 
+def sync_repo(log_f) -> None:
+    """⓪ 跑评测/测试前同步本机 VibeMemory 副本：fetch + 仅 fast-forward。
+    本机领先/分叉/脏改动时不自动合并——用本机现状继续跑，revision 字段如实记录。"""
+    log("⓪ 同步被测仓库（fetch + fast-forward）")
+
+    def _git(*args, timeout=60):
+        return subprocess.run(["git", "-C", str(REPO), *args], capture_output=True,
+                              text=True, encoding="utf-8", errors="replace", timeout=timeout)
+
+    try:
+        r = _git("fetch", "origin", timeout=120)
+        if r.returncode != 0:
+            log(f"  ⚠️ fetch 失败：{(r.stderr or '').strip()[-120:]}，用本机现状继续")
+            return
+        behind = _git("rev-list", "--count", "HEAD..origin/main")
+        ahead = _git("rev-list", "--count", "origin/main..HEAD")
+        if behind.returncode != 0 or ahead.returncode != 0:
+            log("  ⚠️ 无法比较本地与远端，用本机现状继续")
+            return
+        nb, na = int(behind.stdout.strip() or 0), int(ahead.stdout.strip() or 0)
+        if nb == 0:
+            log(f"  已是最新（本机领先 {na} 提交；未提交改动照旧参与本轮被测）")
+            return
+        if na > 0:
+            log(f"  ⚠️ 本地与 origin/main 分叉（本地领先 {na}、落后 {nb} 提交）——"
+                "不自动合并，请人工处理后下轮生效")
+            return
+        m = _git("merge", "--ff-only", "origin/main")
+        if m.returncode != 0:
+            log(f"  ⚠️ fast-forward 失败：{(m.stderr or '').strip()[-120:]}，用本机现状继续")
+            return
+        head = _git("rev-parse", "--short=12", "HEAD").stdout.strip()
+        log(f"  fast-forward {nb} 个提交 → HEAD 现为 {head}")
+    except Exception as e:
+        log(f"  ⚠️ 同步异常（不阻断）：{e}")
+
+
 def main() -> int:
     global LOG_F
     ap = argparse.ArgumentParser()
@@ -177,6 +217,11 @@ def main() -> int:
         LOG_F = log_f
         log_f.write(f"\n===== 定时产出 {datetime.now().isoformat(timespec='seconds')} =====\n")
         log(f"定时产出开始（dry-run={args.dry_run}），日志：{log_path}")
+
+        if args.dry_run:
+            log("⓪ 同步被测仓库：(dry-run) git fetch + fast-forward origin/main")
+        else:
+            sync_repo(log_f)
 
         if ran_today(ROOT / "评测中台" / "runs"):
             log("① 评测：今天已有存档，跳过")
