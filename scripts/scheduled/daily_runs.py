@@ -142,29 +142,44 @@ def pending_files() -> list[tuple[Path, str]]:
 def sync_to_server(log_f) -> bool:
     scp, ssh = find_tool("scp"), find_tool("ssh")
     files = pending_files()
-    if not files:
+    if files:
+        log(f"同步：{len(files)} 个存档 → 服务器")
+        ok = True
+        for p, remote_rel in files:
+            # runs 是相对 REMOTE_ROOT 的相对路径；项目数据目录本身就是绝对远端路径
+            remote_dir = remote_rel if remote_rel.startswith("/") else f"{REMOTE_ROOT}/{remote_rel}"
+            r = subprocess.run([scp, "-P", SSH_PORT, "-o", "BatchMode=yes", "-o", "ConnectTimeout=15",
+                                str(p), f"{SSH_TARGET}:{remote_dir}/"],
+                               capture_output=True, text=True, timeout=120)
+            if r.returncode != 0:
+                ok = False
+                log_f.write(f"scp fail {p.name}: {r.stderr[-300:]}\n")
+                break
+        if not ok:
+            log("同步：scp 失败（服务器可能睡眠），下轮补传")
+            return False
+        r = subprocess.run([ssh, "-p", SSH_PORT, "-o", "BatchMode=yes", "-o", "ConnectTimeout=15",
+                            SSH_TARGET, "curl -s -X POST http://localhost:8080/api/refresh | head -c 120"],
+                           capture_output=True, text=True, timeout=600)
+        log(f"同步：scp 完成，大屏重建触发 → {(r.stdout or '').strip()[:80] or '(无响应)'}")
+        save_marker(datetime.now().timestamp())
+    else:
         log("同步：无新增存档")
-        return True
-    log(f"同步：{len(files)} 个存档 → 服务器")
-    ok = True
-    for p, remote_rel in files:
-        # runs 是相对 REMOTE_ROOT 的相对路径；项目数据目录本身就是绝对远端路径
-        remote_dir = remote_rel if remote_rel.startswith("/") else f"{REMOTE_ROOT}/{remote_rel}"
+
+    # 拉回服务器权威资产（无论是否有新增存档都要拉）：血缘/目录/信号/周对比由服务器
+    # 流水线重建，本地大屏要用最新版——否则门户「近 14 天活动图」等面板会停在旧数据
+    pulled = 0
+    for rel in ["数据中台/assets/lineage_events.jsonl", "数据中台/assets/catalog.json",
+                "数据中台/assets/signals.json", "数据中台/assets/dws/weekly.json"]:
+        dst = ROOT / rel
         r = subprocess.run([scp, "-P", SSH_PORT, "-o", "BatchMode=yes", "-o", "ConnectTimeout=15",
-                            str(p), f"{SSH_TARGET}:{remote_dir}/"],
+                            f"{SSH_TARGET}:{REMOTE_ROOT}/{rel}", str(dst)],
                            capture_output=True, text=True, timeout=120)
-        if r.returncode != 0:
-            ok = False
-            log_f.write(f"scp fail {p.name}: {r.stderr[-300:]}\n")
-            break
-    if not ok:
-        log("同步：scp 失败（服务器可能睡眠），下轮补传")
-        return False
-    r = subprocess.run([ssh, "-p", SSH_PORT, "-o", "BatchMode=yes", "-o", "ConnectTimeout=15",
-                        SSH_TARGET, "curl -s -X POST http://localhost:8080/api/refresh | head -c 120"],
-                       capture_output=True, text=True, timeout=600)
-    log(f"同步：scp 完成，大屏重建触发 → {(r.stdout or '').strip()[:80] or '(无响应)'}")
-    save_marker(datetime.now().timestamp())
+        if r.returncode == 0:
+            pulled += 1
+        else:
+            log(f"同步：拉回 {rel.split('/')[-1]} 失败（不阻断）")
+    log(f"同步：拉回服务器权威资产 {pulled}/4（lineage/catalog/signals/weekly）")
     return True
 
 

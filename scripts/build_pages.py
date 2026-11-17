@@ -1141,7 +1141,14 @@ def build_index() -> str:
             if not ln:
                 continue
             ev = json.loads(ln)
-            day = str(ev.get("eventTime") or ev.get("ts") or "")[:10]
+            ev_ts = str(ev.get("eventTime") or ev.get("ts") or "")
+            if not ev_ts:
+                continue
+            try:
+                # 服务器时区是 UTC：按时间戳自带的时区转本机日期，凌晨产出不错位
+                day = datetime.fromisoformat(ev_ts).astimezone().strftime("%Y-%m-%d")
+            except ValueError:
+                day = ev_ts[:10]
             if day:
                 day_counts[day] = day_counts.get(day, 0) + 1
     except Exception:
