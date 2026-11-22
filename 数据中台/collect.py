@@ -265,7 +265,9 @@ def ex_file_dir(path: Path, src: dict) -> dict:
 @extractor("json_dir")
 def ex_json_dir(path: Path, src: dict) -> dict:
     pattern = src.get("pattern", "*.json")
-    files = sorted(path.glob(pattern))
+    exclude = src.get("exclude_pattern")
+    excluded_files = set(path.glob(exclude)) if exclude else set()
+    files = sorted(set(path.glob(pattern)) - excluded_files)
     recs, total_bytes = [], 0
     for f in files:
         total_bytes += f.stat().st_size

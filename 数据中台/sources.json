@@ -7,6 +7,7 @@
       "kind": "json_dir",
       "path": "{repo}/results",
       "pattern": "*.json",
+      "exclude_pattern": "*_checkpoint.json",
       "required": true,
       "desc": "实验结果存档（MCP 维护冒烟、磁盘 soak、LoCoMo/LongMemEval 试跑等，仓库溯源惯例：顶层带 source/source_sha256/limits）"
     },

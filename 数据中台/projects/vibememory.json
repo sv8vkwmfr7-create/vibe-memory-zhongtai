@@ -5,7 +5,7 @@
   "license": {"spdx": "MIT"},
   "root": {"Windows": "C:/Users/ASYS/Desktop/VibeMemory", "Linux": "/data/home/vibe-memory"},
   "sources": [
-    {"id": "results_experiments", "kind": "json_dir", "path": "{project_root}/results", "pattern": "*.json", "required": true,
+    {"id": "results_experiments", "kind": "json_dir", "path": "{project_root}/results", "pattern": "*.json", "exclude_pattern": "*_checkpoint.json", "required": true,
      "desc": "实验结果存档（MCP 维护冒烟、磁盘 soak、LoCoMo/LongMemEval 试跑等，顶层带 source/source_sha256/limits 溯源头）"},
     {"id": "coverage_xml", "kind": "coverage_xml", "path": "{project_root}/coverage.xml", "required": true,
      "desc": "pytest-cov 覆盖率报告（行/分支覆盖率）"},
