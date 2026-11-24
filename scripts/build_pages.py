@@ -197,6 +197,8 @@ def render_paired_evaluations(records: list[dict]) -> str:
             + "</details>" for row in diffs
         )
         scope = "0 条边，仅验证对照流程" if pair["edges"] == 0 else f"{pair['edges']} 条边"
+        covered = pair.get("edge_covered_questions")
+        coverage = "未记录" if covered is None else f"{covered:,} / {pair['questions']:,} 题"
         stats = "".join(
             f"<div><dt>{label}</dt><dd>{value:,}</dd></div>"
             for label, value in (("评测题数", pair["questions"]), ("开图命中", pair["on_hits"]),
@@ -205,6 +207,7 @@ def render_paired_evaluations(records: list[dict]) -> str:
         panels.append(
             f"<article class='pair-run'><header><code>{escape(record['file'])}</code>"
             f"<span>{scope}</span></header><dl class='pair-stats'>{stats}</dl>"
+            f"<p class='pair-outcomes'>有边覆盖的证据题 {coverage}</p>"
             f"<p class='pair-outcomes'>仅开图 {on_only} · 仅关图 {off_only} · 均命中 {both:,} · 均漏召回 {neither:,}</p>"
             f"{details}<details class='pair-meta'><summary>版本、配置与评测范围</summary>"
             f"<p>SDK 提交 <code>{escape(pair['commit'])}</code></p>"

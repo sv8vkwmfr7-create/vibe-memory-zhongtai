@@ -115,9 +115,15 @@ def ods_from_json_file(path: Path) -> dict:
         snap["scalars_keep"] = keep
     if isinstance(data, dict) and data.get("format") == "vibememory-sdk-pair-v1":
         rows = data["rows"]
+        edge_count = sum(sample["edges"] for sample in data["samples"])
         snap["paired_evaluation"] = {
             **{key: data[key] for key in ("commit", "source_sha256", "mode", "top_k", "backend", "limits")},
-            "edges": sum(sample["edges"] for sample in data["samples"]),
+            "edges": edge_count,
+            "edge_covered_questions": (
+                0 if edge_count == 0 else
+                sum(row["edge_covered"] for row in rows)
+                if all("edge_covered" in row for row in rows) else None
+            ),
             "questions": len(rows),
             "on_hits": sum(row["on"]["hit"] for row in rows),
             "off_hits": sum(row["off"]["hit"] for row in rows),
