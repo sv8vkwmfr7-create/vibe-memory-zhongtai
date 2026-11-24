@@ -110,6 +110,7 @@ def dwd_experiments(ods: dict) -> dict:
             "mode": scalars.get("mode"),
             "limits": scalars.get("limits"),
             "metric_points": points[:120],
+            **({"paired_evaluation": f["paired_evaluation"]} if "paired_evaluation" in f else {}),
         })
     ok = sum(1 for r in recs if not r["parse_error"])
     return {"asset": "dwd_experiments", "generated_at": now_iso(),

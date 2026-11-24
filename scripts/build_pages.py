@@ -175,6 +175,48 @@ def detail_attr(d: dict) -> str:
 
 # ---------------------------------------------------------------- 数据中台页
 
+def render_paired_evaluations(records: list[dict]) -> str:
+    panels = []
+    for record in records:
+        pair = record.get("paired_evaluation")
+        if not pair:
+            continue
+        diffs = pair["differences"]
+        on_only = sum(row["on"]["hit"] for row in diffs)
+        off_only = len(diffs) - on_only
+        both = pair["on_hits"] - on_only
+        neither = pair["questions"] - both - len(diffs)
+        details = "".join(
+            f"<details class='pair-case'><summary><code>{escape(row['id'])}</code> <span>{'仅开图命中' if row['on']['hit'] else '仅关图命中'}</span></summary>"
+            f"<p>官方证据 ID · {escape(', '.join(row['gold']))}</p>"
+            + "".join(
+                f"<p>{label}排名 · "
+                + escape(', '.join(f"{rank}. {atom}" for rank, atom in enumerate(row[arm]["ids"], 1)))
+                + "</p>" for arm, label in (("on", "开图"), ("off", "关图"))
+            )
+            + "</details>" for row in diffs
+        )
+        scope = "0 条边，仅验证对照流程" if pair["edges"] == 0 else f"{pair['edges']} 条边"
+        stats = "".join(
+            f"<div><dt>{label}</dt><dd>{value:,}</dd></div>"
+            for label, value in (("评测题数", pair["questions"]), ("开图命中", pair["on_hits"]),
+                                 ("关图命中", pair["off_hits"]), ("结果有差异", len(diffs)))
+        )
+        panels.append(
+            f"<article class='pair-run'><header><code>{escape(record['file'])}</code>"
+            f"<span>{scope}</span></header><dl class='pair-stats'>{stats}</dl>"
+            f"<p class='pair-outcomes'>仅开图 {on_only} · 仅关图 {off_only} · 均命中 {both:,} · 均漏召回 {neither:,}</p>"
+            f"{details}<details class='pair-meta'><summary>版本、配置与评测范围</summary>"
+            f"<p>SDK 提交 <code>{escape(pair['commit'])}</code></p>"
+            f"<p>数据 SHA-256 <code>{escape(pair['source_sha256'])}</code></p>"
+            f"<p>{escape(pair['backend'])} / {escape(pair['mode'])} / Top-{pair['top_k']}</p>"
+            f"<p>{escape(pair['limits'])}</p></details></article>"
+        )
+    if not panels:
+        return ""
+    return '<section class="panel pair-panel"><h2>图开关配对评测</h2>' + "".join(panels) + "</section>"
+
+
 def build_data_page() -> str:
     assets_dir = ROOT / "数据中台" / "assets"
     catalog = load(assets_dir / "catalog.json") or {}
@@ -182,6 +224,8 @@ def build_data_page() -> str:
     quality = load(assets_dir / "quality_report.json") or {}
     health = load(assets_dir / "dws" / "repo_health.json") or {}
     exp_metrics = load(assets_dir / "dws" / "experiment_metrics.json") or {}
+    experiments = load(assets_dir / "dwd" / "experiments.json") or {}
+    paired_panel = render_paired_evaluations(experiments.get("records", []))
     cards_reg = load(assets_dir.parent / "dataset_cards.json") or {}
 
     # 数据集卡（M0 身份证）：哪来的 / 哪个版本 / 能不能用
@@ -309,6 +353,8 @@ def build_data_page() -> str:
     {kpi('数据质量综合分', f'{qsum.get("overall", 0):.3f}', f'阈值 {qsum.get("threshold_warn", 0.85)} · {qsum.get("status", "")}', 'good' if qsum.get("status") == 'PASS' else 'warn', 'gauge', 'p-quality')}
     {kpi('最近采集', escape(short_dt(gen_at) or '-'), 'collect.py 每次比对指纹', '', 'clock')}
   </div>
+
+  {paired_panel}
 
   <div class="panel">
     <h2>数据汇聚 · 全链路血缘 <span class="tag">六层架构：汇聚 → 存储 → 开发 → 资产治理 → 服务 → 应用</span></h2>

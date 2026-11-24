@@ -281,3 +281,17 @@ details.tblwrap summary { cursor: pointer; color: var(--accent-strong); font-siz
   .page-head .meta { text-align: left; }
   .sig-grid { grid-template-columns: 1fr; }
 }
+
+/* Paired evaluation cards on the data dashboard. */
+.pair-panel { padding: clamp(16px, 3vw, 28px); }
+.pair-run + .pair-run { margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--line); }
+.pair-run header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 16px; overflow-wrap: anywhere; }
+.pair-run header span { color: #76500b; background: #fff4d6; border-radius: 6px; padding: 3px 8px; }
+.pair-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(115px, 1fr)); gap: 10px; margin: 16px 0 12px; }
+.pair-stats div { padding: 12px 14px; background: var(--bg-subtle); border: 1px solid var(--line); border-radius: 10px; }
+.pair-stats dt, .pair-outcomes { color: var(--text-dim); }
+.pair-stats dd { margin: 2px 0 0; font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.pair-case, .pair-meta { margin-top: 10px; padding: 9px 12px; border: 1px solid var(--line); border-radius: 8px; overflow-wrap: anywhere; }
+.pair-case summary, .pair-meta summary { cursor: pointer; }
+.pair-case summary span { margin-inline-start: 8px; color: var(--text-dim); }
+.pair-case p, .pair-meta p { margin: 8px 0 0; }
