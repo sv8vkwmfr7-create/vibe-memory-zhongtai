@@ -271,9 +271,73 @@
     Array.prototype.forEach.call(document.querySelectorAll("table[data-enhance]"), enhanceTable);
   }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", function () { initStatusAndRefresh(); initTables(); initToTop(); initKpiJump(); });
-  } else {
+  function initSectionNav() {
+    const nav = document.querySelector(".section-nav");
+    if (!nav) return;
+    const headings = document.querySelectorAll(".wrap > .panel > h2, .wrap > .grid > .panel > h2");
+    headings.forEach((heading, index) => {
+      const panel = heading.parentElement;
+      const label = Array.from(heading.childNodes)
+        .filter(node => node.nodeType === Node.TEXT_NODE)
+        .map(node => node.textContent).join("").trim();
+      if (!label) return;
+      if (!panel.id) panel.id = "section-" + (index + 1);
+      panel.classList.add("section-target");
+      const link = document.createElement("a");
+      link.href = "#" + panel.id;
+      link.textContent = label;
+      nav.appendChild(link);
+    });
+    nav.hidden = !nav.children.length;
+  }
+
+  function initPairedFilters() {
+    document.querySelectorAll(".pair-run").forEach(run => {
+      const tools = run.querySelector(".pair-tools");
+      const cases = Array.from(run.querySelectorAll(".pair-case"));
+      if (!tools || !cases.length) return;
+      const search = tools.querySelector("input");
+      const group = tools.querySelector("select");
+      const button = tools.querySelector("button");
+      const status = tools.querySelector("[role=status]");
+      const visible = () => cases.filter(item => !item.hidden);
+      function syncButton() {
+        const rows = visible();
+        const expanded = rows.length > 0 && rows.every(item => item.open);
+        button.disabled = !rows.length;
+        button.textContent = expanded ? "收起结果" : "展开结果";
+        button.setAttribute("aria-expanded", String(expanded));
+      }
+      function filter() {
+        const query = search.value.trim().toLowerCase();
+        cases.forEach(item => {
+          item.hidden = (group.value && item.dataset.arm !== group.value) ||
+            !item.textContent.toLowerCase().includes(query);
+        });
+        status.textContent = visible().length + " / " + cases.length + " 题";
+        syncButton();
+      }
+      search.addEventListener("input", filter);
+      group.addEventListener("change", filter);
+      button.addEventListener("click", () => {
+        const open = button.getAttribute("aria-expanded") !== "true";
+        visible().forEach(item => { item.open = open; });
+        syncButton();
+      });
+      cases.forEach(item => item.addEventListener("toggle", syncButton));
+      tools.hidden = false;
+      filter();
+    });
+  }
+
+  function init() {
     initStatusAndRefresh(); initTables(); initToTop(); initKpiJump();
+    initSectionNav(); initPairedFilters();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
   }
 })();

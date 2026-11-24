@@ -119,7 +119,7 @@ def page_shell(title: str, sub: str, body: str, generated_at: str, page_key: str
     js_app = TPL.joinpath("app.js").read_text(encoding="utf-8")
     nav_parts = []
     for key, href, label in NAV:
-        cls = ' class="active"' if key == page_key else ""
+        cls = ' class="active" aria-current="page"' if key == page_key else ""
         nav_parts.append(f'<a href="{href}"{cls}>{label}</a>')
     nav = "".join(nav_parts)
     return f"""<!DOCTYPE html>
@@ -133,7 +133,7 @@ def page_shell(title: str, sub: str, body: str, generated_at: str, page_key: str
 <body data-page="{escape(page_key or 'index')}">
 <header class="topbar">
   <a class="brand" href="index.html"><span class="logo">{icon('logo')}</span><span class="brand-t">VibeMemory <b>四中台</b></span></a>
-  <nav class="nav">{nav}</nav>
+  <nav class="nav" aria-label="中台导航">{nav}</nav>
   <div class="spacer"></div>
   <span id="status-chip" class="status-chip" style="display:none"></span>
   <button id="refresh-btn" class="refresh-btn" style="display:none">⟳ 刷新数据</button>
@@ -146,6 +146,7 @@ def page_shell(title: str, sub: str, body: str, generated_at: str, page_key: str
     </div>
     <div class="meta">生成时间：{escape(generated_at)}<br>数据内嵌 · 离线可开</div>
   </div>
+  <nav class="section-nav" aria-label="本页导航" hidden></nav>
   {body}
   <div class="footer">VibeMemory 数据中台 + 评测/测试/监控中台 · 方法论对齐信通院数据中台实践指南 / OneData / OpenCompass 式评测三层抽象 ·
   资料见 docs/ 目录 · 重新生成：<code>python scripts/build_pages.py</code></div>
@@ -187,7 +188,7 @@ def render_paired_evaluations(records: list[dict]) -> str:
         both = pair["on_hits"] - on_only
         neither = pair["questions"] - both - len(diffs)
         details = "".join(
-            f"<details class='pair-case'><summary><code>{escape(row['id'])}</code> <span>{'仅开图命中' if row['on']['hit'] else '仅关图命中'}</span></summary>"
+            f"<details class='pair-case' data-arm='{'on' if row['on']['hit'] else 'off'}'><summary><code>{escape(row['id'])}</code> <span>{'仅开图命中' if row['on']['hit'] else '仅关图命中'}</span></summary>"
             f"<p>官方证据 ID · {escape(', '.join(row['gold']))}</p>"
             + "".join(
                 f"<p>{label}排名 · "
@@ -209,6 +210,10 @@ def render_paired_evaluations(records: list[dict]) -> str:
             f"<span>{scope}</span></header><dl class='pair-stats'>{stats}</dl>"
             f"<p class='pair-outcomes'>有边覆盖的证据题 {coverage}</p>"
             f"<p class='pair-outcomes'>仅开图 {on_only} · 仅关图 {off_only} · 均命中 {both:,} · 均漏召回 {neither:,}</p>"
+            "<div class='pair-tools' hidden>"
+            "<label>查差异题 <input type='search' placeholder='题号或证据 ID'></label>"
+            "<label>命中组 <select><option value=''>全部</option><option value='on'>仅开图</option><option value='off'>仅关图</option></select></label>"
+            "<button type='button' aria-expanded='false'>展开结果</button><span role='status'></span></div>"
             f"{details}<details class='pair-meta'><summary>版本、配置与评测范围</summary>"
             f"<p>SDK 提交 <code>{escape(pair['commit'])}</code></p>"
             f"<p>数据 SHA-256 <code>{escape(pair['source_sha256'])}</code></p>"
@@ -1215,16 +1220,7 @@ def build_index() -> str:
     {kpi('测试中台', fmt_pct(((test_latest.get('summary') or {}).get('pass_rate'))), f"{((test_latest.get('summary') or {}).get('total', 0)):,} 用例 · 行覆盖 {fmt_pct(((test_latest.get('coverage') or {}).get('line_rate')))}", 'good', 'flask', 'entry-test')}
     {kpi('监控中台', f"{((obs_latest.get('recall') or {}).get('p95_ms', '?'))}<span class='unit'>ms</span>", f"recall p95 · 命中率 {fmt_pct(((obs_latest.get('recall') or {}).get('hit_rate')))}", 'good', 'pulse', 'entry-ops')}
   </div>
-  {weekly_block}
-  {signals_block}
-
-  <div class="panel">
-    <h2>近 14 天数据活动 <span id="p-activity" class="tag">血缘事件逐日计数 · collect/build_assets 自动产出</span></h2>
-    <div id="chart-activity" class="chart-box"></div>
-    <div class="desc" style="margin-top:8px">每天定时流水线自动跑评测/测试/监控并回流存档，血缘事件随之逐日累积；连续有柱 = 数据底座在持续增长。</div>
-  </div>
-
-  <div class="grid g2">
+  <div class="grid g2 portal-entries">
     <div class="panel entry" id="entry-data">
       <div class="entry-head"><span class="entry-ico">{icon('database')}</span>
         <div><div class="entry-t">数据中台</div><div class="entry-en">Data Platform · 底座</div></div></div>
@@ -1276,6 +1272,15 @@ def build_index() -> str:
       </ul>
       <a class="card-cta" href="ops-platform.html">进入监控中台大屏 →</a>
     </div>
+  </div>
+
+  {weekly_block}
+  {signals_block}
+
+  <div class="panel">
+    <h2>近 14 天数据活动 <span id="p-activity" class="tag">血缘事件逐日计数 · collect/build_assets 自动产出</span></h2>
+    <div id="chart-activity" class="chart-box"></div>
+    <div class="desc" style="margin-top:8px">每天定时流水线自动跑评测/测试/监控并回流存档，血缘事件随之逐日累积；连续有柱 = 数据底座在持续增长。</div>
   </div>
 
   <div class="panel">
